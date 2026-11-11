@@ -3,8 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Header, Query, Response, status
 
-from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.api.dependencies import DatabaseSession
+from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.modules.bookings.schemas import (
     BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListItem, BookingListQuery,
 )

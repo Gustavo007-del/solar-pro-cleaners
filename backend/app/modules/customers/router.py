@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.api.dependencies import AppSettings, DatabaseSession
+from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.modules.customers.dependencies import AuthenticatedCustomer
 from app.modules.customers.schemas import (
     CustomerAccount, CustomerAuthentication, CustomerLogin, CustomerProfile,

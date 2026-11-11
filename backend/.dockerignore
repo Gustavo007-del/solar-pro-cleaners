@@ -1,0 +1,13 @@
+**
+!requirements.txt
+!app/
+!app/**
+!alembic/
+!alembic/**
+!alembic.ini
+**/__pycache__/
+**/*.py[cod]
+**/.env*
+**/*.pem
+**/*.key
+

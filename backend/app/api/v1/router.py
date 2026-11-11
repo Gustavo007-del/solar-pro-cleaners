@@ -12,13 +12,14 @@ from app.modules.locations.router import router as locations_router
 from app.modules.locations.router import location_router
 from app.modules.locations.address_router import router as saved_addresses_router
 from app.modules.services.router import router as services_router
+from app.modules.system.public import api as public_info_router
 from app.modules.system.router import router as system_router
 from app.modules.technicians.router import router as technicians_router
 from app.modules.technicians.assignment_router import router as admin_assignments_router
 
 router = APIRouter()
 for module_router in (
-    system_router, customers_router, bookings_router, services_router,
+    system_router, public_info_router, customers_router, bookings_router, services_router,
     locations_router, location_router, saved_addresses_router, business_router, availability_router,
     admins_router, admin_bookings_router, admin_customers_router, admin_dashboard_router,
     technicians_router, admin_assignments_router,

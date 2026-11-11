@@ -3,8 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.api.dependencies import DatabaseSession
+from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.modules.admins.dependencies import require_permission
 from app.modules.admins.permissions import Permission
 from app.modules.admins.responses import prevent_caching

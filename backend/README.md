@@ -1,6 +1,6 @@
 # Solar Care API
 
-The Python backend lives beside the existing Expo app. It provides the FastAPI foundation, installation-based customer authentication, public catalogue and business configuration APIs, and authenticated booking management. See the [customer API contract](./docs/customer-auth.md), [business configuration contract](./docs/business-configuration.md), and [booking API contract](./docs/bookings.md).
+The Python backend lives beside the existing Expo app. It provides installation-based customer authentication, public business information, booking management, admin operations, and technician assignments. See the [production deployment runbook](./docs/deployment.md) for staging, production, migrations, ingress, and recovery.
 
 ## Architecture
 
@@ -18,13 +18,15 @@ As a feature grows, keep its routes, schemas, models, service logic, and any rep
 
 ## Configuration and API
 
-`requirements.txt` defines the supported dependency ranges for Python 3.12 or 3.13. `.env.example` documents the server configuration. Backend settings read `backend/.env` and accept overrides from process environment variables. Development can leave the database and signing secret unset for the system endpoints. Production requires PostgreSQL, TLS, and a JWT signing secret, rejects debug mode, and disables documentation by default. Use an explicit JSON array of allowed browser origins for the admin dashboard. A native mobile client authenticates independently of browser CORS.
+`requirements.txt` defines the supported dependency ranges for Python 3.12 or 3.13. `.env.example` documents the server configuration. Backend settings read `backend/.env` and accept overrides from process environment variables. Staging and production require PostgreSQL with TLS, trusted hosts, and independent customer, admin and rate-limit secrets. Interactive API documentation is available in development.
 
-- `GET /api/v1/health` reports process liveness.
+- `GET /health` and `GET /api/v1/health` report process liveness.
+- `GET /health/ready` and `GET /api/v1/health/ready` check PostgreSQL readiness.
+- `/` links to the Privacy Policy and Contact Us pages. JSON is available at `/api/v1/privacy-policy` and `/api/v1/contact-us`.
 - `GET /api/v1/info` returns the public API name and version.
 - Development documentation is available at `/docs`, `/redoc`, and `/api/v1/openapi.json`.
 
-System endpoints are independent of database readiness. The public API exposes no database connectivity or configuration details. Errors use an `error` envelope with a stable code, a safe message, and a generated request ID. Validation errors include safe source categories. Logs use UTC timestamps, request IDs, static route templates, status codes, and timing. Uvicorn's raw access logging is suppressed by the application logging configuration. Apply the same redaction policy to any separate ingress or hosting logs.
+Errors use an `error` envelope with a stable code, a safe message, and a generated request ID. Validation errors include safe source categories. Logs use UTC timestamps, request IDs, static route templates, status codes, and timing. Apply the same redaction policy to any separate ingress or hosting logs.
 
 ## Supabase and migrations
 

@@ -1,9 +1,8 @@
-from collections.abc import Callable
 from datetime import UTC, datetime
 from ipaddress import IPv6Address, ip_address, ip_network
 from typing import Literal
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, params
 
 from app.api.dependencies import AppSettings, DatabaseSession
 from app.core.exceptions import AppError
@@ -12,7 +11,7 @@ from app.schemas.common import ErrorResponse
 
 Category = Literal[
     "customer_register", "customer_login", "customer_refresh", "admin_refresh", "booking_create",
-    "booking_cancel", "customer_update", "admin_customer_update", "admin_create", "admin_password",
+    "booking_cancel", "admin_booking_cancel", "customer_update", "admin_customer_update", "admin_create", "admin_password",
 ]
 RATE_LIMITED = {429: {"model": ErrorResponse, "description": "Retry after the time in Retry-After."}}
 
@@ -30,11 +29,11 @@ def client_source(request: Request) -> str:
     return str(address)
 
 
-def rate_limit(category: Category) -> Callable:
+def rate_limit(category: Category) -> params.Depends:
     def check(request: Request, settings: AppSettings, db: DatabaseSession) -> None:
         if settings.rate_limit_secret is None:  # Optional in local development only.
             return
-        limit_category = "customer_update" if category == "admin_customer_update" else category
+        limit_category = category.removeprefix("admin_") if category in {"admin_customer_update", "admin_booking_cancel"} else category
         limit = getattr(settings, f"rate_limit_{limit_category}")
         window = settings.rate_limit_window_seconds
         now = int(datetime.now(UTC).timestamp())

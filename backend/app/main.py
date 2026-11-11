@@ -10,6 +10,9 @@ from app.core.config import Settings, get_settings
 from app.core.database import create_database
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
+from app.middleware.limits import HostValidationMiddleware, RequestSizeMiddleware
+from app.modules.system.public import web as public_web
+from app.modules.system.router import operations
 from app.middleware.requests import RequestContextMiddleware
 from app.schemas.common import ErrorResponse
 
@@ -67,16 +70,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.database = None
 
     register_exception_handlers(app)
-    app.add_middleware(RequestContextMiddleware)
+    app.add_middleware(RequestSizeMiddleware, max_bytes=settings.request_max_bytes)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_cors_origins,
         allow_credentials=bool(settings.admin_browser_origins),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "Retry-After"],
         max_age=600,
     )
+    if settings.trusted_hosts:
+        app.add_middleware(HostValidationMiddleware, allowed_hosts=settings.trusted_hosts)
+    app.add_middleware(RequestContextMiddleware, api_prefix=settings.versioned_prefix)
+    app.include_router(operations)
+    app.include_router(public_web)
     app.include_router(create_api_router(settings))
     return app
 

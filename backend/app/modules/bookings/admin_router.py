@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Response
 
 from app.api.dependencies import DatabaseSession
+from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.modules.admins.dependencies import require_permission
 from app.modules.admins.permissions import Permission
 from app.modules.admins.responses import prevent_caching
@@ -48,7 +49,8 @@ def status(booking_id: UUID, data: AdminBookingStatusUpdate, db: DatabaseSession
     return change_booking_status(db, admin, booking_id, data.status, reason=data.reason)
 
 
-@router.post("/{booking_id}/cancel", summary="Cancel a booking through the admin workflow", responses=conflict)
+@router.post("/{booking_id}/cancel", summary="Cancel a booking through the admin workflow",
+             dependencies=[rate_limit("admin_booking_cancel")], responses={**conflict, **RATE_LIMITED})
 def cancel(
     booking_id: UUID, db: DatabaseSession, admin: BookingCanceller, data: BookingCancellation | None = None,
 ) -> AdminBookingDetails:

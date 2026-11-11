@@ -3,8 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 
-from app.api.rate_limits import RATE_LIMITED, client_source, rate_limit
 from app.api.dependencies import AppSettings, DatabaseSession
+from app.api.rate_limits import RATE_LIMITED, client_source, rate_limit
 from app.modules.admins.authentication import change_password, login
 from app.modules.admins.browser import clear_cookie, publish_tokens, refresh_input, require_browser_origin
 from app.modules.admins.dependencies import AuthenticatedAdmin, require_permission

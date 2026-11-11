@@ -5,7 +5,11 @@ from logging.config import dictConfig
 
 from app.core.config import Settings
 
-SAFE_EVENTS = {"startup", "shutdown", "request", "request_failed", "migration_failed"}
+SAFE_EVENTS = {
+    "startup", "shutdown", "request", "request_failed", "migration_failed", "database_issue",
+    "authentication_failed", "authorization_failed", "rate_limited", "booking_create", "booking_cancel",
+    "booking_admin_cancel", "booking_status", "booking_assign", "booking_reassign", "booking_unassign",
+}
 
 
 class JsonFormatter(logging.Formatter):
