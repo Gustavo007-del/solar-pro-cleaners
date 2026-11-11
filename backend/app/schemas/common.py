@@ -20,8 +20,6 @@ class Page(BaseModel, Generic[Item]):
     page_size: int = Field(ge=1, le=100)
     total: int = Field(ge=0)
 
-
-class AdminPage(Page[Item], Generic[Item]):
     @computed_field
     @property
     def total_pages(self) -> int:
@@ -36,6 +34,10 @@ class AdminPage(Page[Item], Generic[Item]):
     @property
     def has_previous(self) -> bool:
         return self.total > 0 and self.page > 1
+
+
+class AdminPage(Page[Item], Generic[Item]):
+    """Retain the existing named admin schema for generated clients."""
 
 
 class ValidationIssue(BaseModel):

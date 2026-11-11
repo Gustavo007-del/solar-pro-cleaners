@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import computed_field, model_validator
+from pydantic import PlainSerializer, computed_field, model_validator
 
 from app.modules.customers.schemas import FullName, PhoneNumber
 from app.modules.locations.schemas import LocationFields
@@ -59,6 +59,9 @@ class SavedAddressUpdate(AddressPatch):
         return self
 
 
+Coordinate = Annotated[Decimal, PlainSerializer(float, return_type=float, when_used="json")]
+
+
 class AddressSnapshotResponse(PublicRecord):
     address_line: str
     address_line_2: str | None
@@ -70,8 +73,8 @@ class AddressSnapshotResponse(PublicRecord):
     state: str | None
     postal_code: str | None
     landmark: str | None
-    latitude: Decimal | None
-    longitude: Decimal | None
+    latitude: Coordinate | None
+    longitude: Coordinate | None
     location_source: LocationSource
 
 
