@@ -1,0 +1,533 @@
+{
+  "brand": {
+    "descriptor": "Solar panel cleaning and maintenance",
+    "tagline": "Clean Panels. Better Energy."
+  },
+  "nav": {
+    "home": "Home",
+    "bookings": "My Bookings",
+    "contact": "Contact",
+    "profile": "Profile",
+    "onboarding": "Welcome",
+    "setup": "Profile Setup",
+    "booking": "Book a Cleaning",
+    "bookingDetails": "Booking Details",
+    "settings": "Settings"
+  },
+  "common": {
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "next": "Next",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "retry": "Try Again",
+    "phone": "Phone number",
+    "skip": "Skip",
+    "getStarted": "Get Started",
+    "saveAndContinue": "Save and Continue",
+    "saving": "Saving…"
+  },
+  "placeholder": {
+    "message": "This section will be available in a later release."
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "Try opening this screen again.",
+    "startup": "We couldn’t load your saved details. Please try again.",
+    "save": "We couldn’t save your changes. Please try again."
+  },
+  "language": {
+    "title": "Choose Your Language",
+    "description": "You can change your language later in Settings.",
+    "english": "English",
+    "malayalam": "മലയാളം"
+  },
+  "onboarding": {
+    "progress": "Step {{current}} of {{total}}",
+    "cleaning": {
+      "title": "Keep Your Solar Panels Clean",
+      "description": "Remove dust, dirt and other buildup with professional solar panel cleaning services."
+    },
+    "booking": {
+      "title": "Book Your Service Easily",
+      "description": "Request a solar panel cleaning service in just a few simple steps."
+    },
+    "location": {
+      "title": "We Come to Your Location",
+      "description": "Share your location and let our team reach your solar installation."
+    }
+  },
+  "registration": {
+    "title": "Let's Get Started",
+    "description": "Enter your details to book solar panel cleaning services.",
+    "name": "Full name (required)",
+    "primary": "Primary mobile number (required)",
+    "alternate": "Alternate mobile number (optional)",
+    "enterName": "Enter your full name",
+    "enterMobile": "Enter your mobile number",
+    "invalidName": "Enter your full name.",
+    "nameTooLong": "Use {{max}} characters or fewer.",
+    "primaryRequired": "Enter your primary mobile number.",
+    "invalidMobile": "Enter a valid 10-digit Indian mobile number, with or without +91.",
+    "privacy": "We collect your contact details to manage service requests and communicate with you about bookings."
+  },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms and Conditions",
+    "dataUsage": "Data Usage Information",
+    "reviewNotice": "Draft for business review. The business must finalize and approve this document before Play Store publication.",
+    "openOnline": "Open Online Document",
+    "content": {
+      "privacyIntro": {
+        "title": "Introduction",
+        "body": "This draft explains how {{appName}} handles information when you set up a profile, prepare a solar panel cleaning request, or contact the business."
+      },
+      "collection": {
+        "title": "Information We Collect",
+        "body": "The app saves your name, primary mobile number, optional alternate number, preferred language, and the details you provide for service requests. Booking details include the installation address, coordinates when you share them, and any instructions you add."
+      },
+      "contactData": {
+        "title": "Customer Contact Information",
+        "body": "Your saved name and mobile numbers are used to fill future booking requests. Each submitted request keeps the contact details you provided at submission."
+      },
+      "location": {
+        "title": "Location Information",
+        "body": "Each location lookup begins when you tap Use My Current Location during booking and allow foreground location access. You can enter an address manually. Captured coordinates are saved with the booking if you choose that location."
+      },
+      "bookingData": {
+        "title": "Booking Information",
+        "body": "A saved request contains the service, booking reference, contact details, address, optional instructions, status, and submission time. You can review your requests in My Bookings."
+      },
+      "use": {
+        "title": "How Information Is Used",
+        "body": "The app uses your information to prefill forms, show your booking history, and remember your language. The business will use details it receives to review requests, locate the installation, and communicate about service."
+      },
+      "storage": {
+        "title": "Data Storage",
+        "body": "This version stores profiles, language preferences, and booking requests on the device. Booking submission creates a local record. The business will define its storage and retention policy before connecting a backend."
+      },
+      "sharing": {
+        "title": "Information Sharing",
+        "body": "Using Google Maps opens the map service with the selected coordinates. Calls, WhatsApp, and websites are handled by the apps or services you open. The business may share relevant details with people coordinating or delivering service, subject to its final policy."
+      },
+      "security": {
+        "title": "Data Security",
+        "body": "Local data is subject to your device’s security and backup settings. The business will define and document safeguards for any future server-side processing."
+      },
+      "rights": {
+        "title": "Customer Rights",
+        "body": "You can review your saved requests and correct your contact details in Profile. For questions about access, correction, or deletion of information held by the business, use its published contact details."
+      },
+      "deletion": {
+        "title": "Account Deletion",
+        "body": "The Delete Account screen explains the consequences and asks for confirmation. This version cannot send a deletion request. The business must approve a deletion and retention policy before connecting that service."
+      },
+      "contact": {
+        "title": "Contact Information",
+        "body": "Use the business contact details published in the app for questions about service, privacy, or these terms."
+      },
+      "policyUpdates": {
+        "title": "Policy Updates",
+        "body": "The business will review this draft and publish the applicable privacy policy before release. Refer to the approved policy for later changes."
+      },
+      "termsIntro": {
+        "title": "Introduction",
+        "body": "These draft terms describe the {{appName}} booking experience. The business will provide the approved terms before publication."
+      },
+      "service": {
+        "title": "Description of Service",
+        "body": "{{appName}} lets customers prepare requests for professional solar panel cleaning at the installation location."
+      },
+      "requests": {
+        "title": "Booking Requests",
+        "body": "Submitting a request in this version records it on the device with a pending status. Keep the booking reference if you need assistance."
+      },
+      "confirmation": {
+        "title": "Booking Confirmation",
+        "body": "The business must confirm a request before service is arranged. A pending record indicates that confirmation is still required."
+      },
+      "serviceLocation": {
+        "title": "Service Location",
+        "body": "Provide the address of the solar installation and review any GPS location before submitting. Include directions that would help the team find the site."
+      },
+      "responsibilities": {
+        "title": "Customer Responsibilities",
+        "body": "Provide accurate contact and installation details. Coordinate access to the installation with the business and share relevant site conditions."
+      },
+      "scheduling": {
+        "title": "Service Scheduling",
+        "body": "Scheduling depends on the installation location and the business’s availability. Arrange a suitable time with the business."
+      },
+      "cancellation": {
+        "title": "Changes and Cancellation",
+        "body": "Contact the business to discuss changes or cancellation. The business will publish its applicable policy before release."
+      },
+      "pricing": {
+        "title": "Pricing and Payment",
+        "body": "Ask the business about pricing and payment arrangements before agreeing to service. The business will provide the applicable terms."
+      },
+      "limitations": {
+        "title": "Service Limitations",
+        "body": "The business will review access and site conditions when deciding whether it can provide the requested service."
+      },
+      "communication": {
+        "title": "Communication",
+        "body": "Use the listed contact channels to reach the team. The business may use the contact details you provide to discuss your request."
+      },
+      "termsUpdates": {
+        "title": "Changes to Terms",
+        "body": "The business will publish the approved terms and communicate later changes through its chosen channels."
+      },
+      "external": {
+        "title": "External Services",
+        "body": "The app opens the dialer, WhatsApp, Google Maps, or a configured website when you choose that action. The external app or service handles what happens after opening."
+      }
+    }
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "morningNamed": "Good morning, {{name}}",
+      "afternoon": "Good afternoon",
+      "afternoonNamed": "Good afternoon, {{name}}",
+      "evening": "Good evening",
+      "eveningNamed": "Good evening, {{name}}",
+      "subtitle": "Keep your solar panels in good condition."
+    },
+    "hero": {
+      "title": "Give Your Solar Panels a Fresh Start",
+      "description": "Professional cleaning to help maintain your solar installation.",
+      "location": "Convenient service at your location."
+    },
+    "introduction": {
+      "title": "Professional Solar Panel Cleaning",
+      "description": "Dust, dirt, and bird droppings can build up over time. Our cleaning service helps keep your solar installation cleaner."
+    },
+    "benefits": {
+      "title": "Why Choose Our Service?",
+      "cleaning": {
+        "title": "Professional Cleaning",
+        "description": "Careful cleaning for your solar panel installation."
+      },
+      "booking": {
+        "title": "Convenient Booking",
+        "description": "Request cleaning directly through the app."
+      },
+      "location": {
+        "title": "Location-Based Service",
+        "description": "Share your location so our team can find your installation."
+      },
+      "assistance": {
+        "title": "Personal Assistance",
+        "description": "Contact our team directly when you need help."
+      }
+    },
+    "steps": {
+      "title": "How It Works",
+      "number": "Step {{number}}",
+      "book": {
+        "title": "Book Your Service",
+        "description": "Submit your solar panel cleaning request."
+      },
+      "share": {
+        "title": "Share Your Location",
+        "description": "Provide your installation location so our team can reach you."
+      },
+      "service": {
+        "title": "Get Your Service",
+        "description": "Our team will coordinate with you and arrange the cleaning."
+      }
+    },
+    "information": {
+      "title": "Before You Book",
+      "service": {
+        "label": "Service",
+        "value": "Solar panel cleaning"
+      },
+      "availability": {
+        "label": "Availability",
+        "value": "Depends on scheduling and your location."
+      },
+      "booking": {
+        "label": "How to book",
+        "value": "Submit a request through this app."
+      },
+      "coordination": {
+        "label": "Coordination",
+        "value": "Our team will contact you to arrange the service."
+      }
+    },
+    "support": {
+      "title": "Need Help?",
+      "description": "Ask our team about solar panel cleaning.",
+      "call": "Call Us",
+      "whatsapp": "WhatsApp",
+      "unavailable": "Support contact details are currently unavailable.",
+      "callError": "We couldn’t open the phone dialer. Please try again.",
+      "whatsappError": "We couldn’t open the WhatsApp link. Please try again."
+    }
+  },
+  "booking": {
+    "title": "Book Solar Panel Cleaning",
+    "description": "Provide your installation location so our team can arrange your cleaning service.",
+    "service": {
+      "name": "Solar Panel Cleaning",
+      "description": "Professional solar panel cleaning at your location.",
+      "category": "Cleaning Service"
+    },
+    "location": {
+      "title": "Your Service Location",
+      "description": "Use GPS to identify the installation location. If you’re elsewhere or prefer not to share GPS, enter the address manually.",
+      "useCurrent": "Use My Current Location",
+      "getting": "Getting your location…",
+      "detected": "Location detected",
+      "manual": "Manual address",
+      "confirmed": "Location confirmed",
+      "coordinateLabel": "GPS coordinates {{value}}",
+      "noAddress": "We captured the coordinates. Enter an address so our team can find your installation.",
+      "enterAddress": "Enter Address Manually",
+      "editAddress": "Edit Address",
+      "refresh": "Refresh Location",
+      "confirm": "Confirm Location",
+      "openMaps": "Open in Google Maps",
+      "settings": "Open Device Settings",
+      "mapsError": "Couldn’t open Google Maps. Please try again.",
+      "settingsError": "Couldn’t open Settings. Open it from your device or enter the address manually.",
+      "failure": {
+        "permissionDenied": "Location permission was declined. You can enable it in Settings to capture GPS coordinates, or enter the address manually.",
+        "permissionBlocked": "Enable location access for this app in Settings to use GPS, or enter the address manually.",
+        "servicesDisabled": "Device location is turned off. Turn it on and try again, or enter the address manually.",
+        "timeout": "Getting your location took too long. Try again or enter the address manually.",
+        "unavailable": "We couldn’t get a GPS location. Try again or enter the address manually."
+      }
+    },
+    "address": {
+      "title": "Installation Address",
+      "houseName": "House or building name or number (required)",
+      "locality": "Area or locality (required)",
+      "city": "City or town (required)",
+      "district": "District (required)",
+      "state": "State (required)",
+      "landmark": "Landmark (optional)",
+      "pinCode": "PIN code (optional)",
+      "save": "Save Address",
+      "required": "Enter this address detail.",
+      "tooLong": "Use {{max}} characters or fewer.",
+      "invalidPin": "Enter a valid six-digit Indian PIN code."
+    },
+    "instructions": {
+      "title": "Additional Instructions",
+      "label": "Additional Instructions (optional)",
+      "placeholder": "Add any details that may help our team find your solar installation…",
+      "count": "{{used}} of {{max}} characters"
+    },
+    "customer": {
+      "title": "Customer Details",
+      "name": "Customer name",
+      "primaryPhone": "Primary mobile number",
+      "alternatePhone": "Alternate mobile number",
+      "edit": "Edit Profile",
+      "missing": "A customer profile is required to submit a booking. Open Profile to review your details."
+    },
+    "summary": {
+      "title": "Booking Summary",
+      "service": "Service",
+      "address": "Service address",
+      "coordinates": "GPS coordinates",
+      "method": "Location method",
+      "gps": "GPS with detected address",
+      "editedGps": "GPS with manually edited address",
+      "manual": "Manual address",
+      "locationRequired": "Confirm your service location to complete this summary.",
+      "confirmDetails": "I confirm that the above location and contact details are correct."
+    },
+    "submit": "Submit Booking",
+    "submitting": "Saving your booking…",
+    "submitError": "We couldn’t save your booking. Your details are still here. Please try again.",
+    "success": {
+      "title": "Booking Request Saved",
+      "description": "Your solar panel cleaning request is saved on this device. Keep the booking reference if you contact the business.",
+      "reference": "Booking Reference",
+      "myBookings": "View My Bookings",
+      "home": "Back to Home",
+      "unavailable": "Booking Unavailable",
+      "notFound": "We couldn’t find this booking for your profile.",
+      "readError": "We couldn’t load your saved booking. Please try again."
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "assigned": "Assigned",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "unknown": "Status Unavailable"
+    },
+    "statusDescription": {
+      "pending": "This request is saved on this device with Pending status.",
+      "confirmed": "The business has confirmed your service request.",
+      "assigned": "A technician has been assigned to your service request.",
+      "in_progress": "Your solar panel cleaning service is in progress.",
+      "completed": "Your solar panel cleaning service is complete.",
+      "cancelled": "This booking has been cancelled.",
+      "unknown": "The status for this booking is currently unavailable."
+    },
+    "history": {
+      "description": "Manage and track your solar panel cleaning requests.",
+      "total": "Total Bookings",
+      "all": "All",
+      "viewDetails": "View Details",
+      "viewAll": "View All Bookings",
+      "emptyDescription": "Your solar panel cleaning requests will appear here once you book a service.",
+      "filteredEmpty": "Bookings with this status will appear here.",
+      "empty": {
+        "all": "No Bookings Yet",
+        "pending": "No Pending Bookings",
+        "confirmed": "No Confirmed Bookings",
+        "assigned": "No Assigned Bookings",
+        "in_progress": "No Bookings In Progress",
+        "completed": "No Completed Bookings",
+        "cancelled": "No Cancelled Bookings"
+      },
+      "readErrorTitle": "Bookings Unavailable",
+      "readError": "We couldn’t load your saved bookings. Please try again.",
+      "refreshError": "We couldn’t refresh your bookings. Please try again.",
+      "profileMissing": "Booking history requires a customer profile."
+    },
+    "progress": {
+      "title": "Booking Progress",
+      "accessibleStep": "{{label}}. {{state}}.",
+      "step": {
+        "pending": "Request Submitted",
+        "confirmed": "Confirmed",
+        "assigned": "Technician Assigned",
+        "in_progress": "Service In Progress",
+        "completed": "Service Completed"
+      },
+      "state": {
+        "done": "Complete",
+        "active": "Current step",
+        "upcoming": "Upcoming"
+      }
+    },
+    "details": {
+      "back": "Back to Bookings",
+      "service": "Service Details",
+      "location": "Service Location",
+      "call": "Call Customer",
+      "timestamps": "Booking Timestamps",
+      "submittedAt": "Submitted on",
+      "addressFields": {
+        "houseName": "House or building",
+        "locality": "Area or locality",
+        "city": "City or town",
+        "district": "District",
+        "state": "State",
+        "pinCode": "PIN code",
+        "landmark": "Landmark"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Need assistance? Get in touch with our team.",
+    "welcome": {
+      "title": "We're Here to Help",
+      "description": "Have questions about solar panel cleaning or an existing booking? Contact our team for assistance."
+    },
+    "call": {
+      "description": "Speak directly with our team.",
+      "action": "Call Now",
+      "unavailable": "A valid business phone number is currently unavailable."
+    },
+    "whatsapp": {
+      "description": "Chat with our team for assistance.",
+      "action": "Chat on WhatsApp",
+      "unavailable": "A valid WhatsApp number is currently unavailable."
+    },
+    "booking": {
+      "title": "Need Help With a Booking?",
+      "description": "Keep your booking reference ready when contacting us about a service request."
+    },
+    "business": {
+      "title": "Contact Information",
+      "name": "Business name",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "address": "Address",
+      "hours": "Working hours",
+      "website": "Open Website",
+      "legalName": "Business legal name"
+    },
+    "linkError": "We couldn’t open this link. Please try again."
+  },
+  "profile": {
+    "title": "My Profile",
+    "fullName": "Full name",
+    "language": "Preferred language",
+    "accountInformation": "Account Information",
+    "missingTitle": "Profile Unavailable",
+    "missing": "We couldn’t load your customer profile.",
+    "editDescription": "Update the name and mobile numbers used for future service requests.",
+    "saveChanges": "Save Changes",
+    "menu": {
+      "bookings": "View your solar panel cleaning requests.",
+      "settings": "Manage app preferences and account options.",
+      "support": "Contact Support"
+    }
+  },
+  "settings": {
+    "preferences": "Preferences",
+    "language": "Language",
+    "light": "Light Appearance",
+    "account": "Account",
+    "legal": "Legal and Privacy",
+    "about": "About",
+    "version": "Application version",
+    "copyright": "© {{year}} {{name}}",
+    "editDescription": "Update your name and mobile numbers.",
+    "accountDescription": "View the details saved for your profile.",
+    "privacyDescription": "Read how the app handles your information.",
+    "termsDescription": "Read the draft service and booking terms.",
+    "dataDescription": "See what the app stores and which actions open other services."
+  },
+  "accountDeletion": {
+    "action": "Delete Account",
+    "title": "Delete Your Account",
+    "warning": "Deletion Warning",
+    "consequences": "Account deletion can remove access to your profile and booking history. Once the business completes deletion, it may be irreversible.",
+    "retention": "The business’s final retention policy will determine what is deleted or scheduled for deletion. Some records may need to be kept for legal or legitimate business reasons.",
+    "availability": "Account deletion requires a backend connection that is unavailable in this version. This screen prepares the confirmation and leaves your local data in place.",
+    "acknowledge": "I understand that account deletion may remove access to my profile and booking history.",
+    "confirm": "Confirm Deletion",
+    "review": "You’ve acknowledged the consequences. Confirm to check whether this version can send your request.",
+    "outcome": {
+      "unavailable": {
+        "title": "Account Deletion Unavailable",
+        "description": "This version cannot send an account deletion request. Your profile and bookings are still saved on this device."
+      },
+      "submitted": {
+        "title": "Deletion Request Submitted",
+        "description": "The business received your account deletion request."
+      },
+      "pending": {
+        "title": "Deletion Pending",
+        "description": "The business is processing your deletion request under its retention policy."
+      },
+      "completed": {
+        "title": "Deletion Completed",
+        "description": "The service reports that it completed your account deletion request."
+      },
+      "failed": {
+        "title": "Deletion Failed",
+        "description": "Your request could not be processed. Please try again."
+      }
+    },
+    "openRequestPage": "Open Deletion Request Page"
+  }
+}

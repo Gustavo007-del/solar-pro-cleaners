@@ -1,0 +1,17 @@
+{
+  "name": "Solar Care",
+  "nameMl": "സോളാർ കെയർ",
+  "slug": "solar-care",
+  "scheme": "solarcare",
+  "version": "1.0.0",
+  "applicationId": "com.solarcare.app",
+  "androidVersionCode": 1,
+  "iosBuildNumber": "1",
+  "assets": {
+    "icon": "./assets/branding/icon.png",
+    "adaptiveForeground": "./assets/branding/adaptive-foreground.png",
+    "adaptiveBackground": "./assets/branding/adaptive-background.png",
+    "adaptiveMonochrome": "./assets/branding/adaptive-monochrome.png",
+    "splash": "./assets/branding/splash-mark.png"
+  }
+}

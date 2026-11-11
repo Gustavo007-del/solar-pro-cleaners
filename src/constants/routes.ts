@@ -1,0 +1,17 @@
+export const appRoutes = {
+  booking: '/booking',
+  bookingDetails: '/booking/[bookingId]',
+  bookingSuccess: '/booking/success/[bookingId]',
+  home: '/(main)/home',
+  myBookings: '/(main)/my-bookings',
+  profile: '/(main)/profile',
+  registration: '/profile-setup',
+  contact: '/(main)/contact',
+  settings: '/settings',
+  editProfile: '/settings/edit-profile',
+  accountInformation: '/settings/account',
+  deleteAccount: '/settings/delete-account',
+  dataUsage: '/settings/data-usage',
+  privacy: '/privacy-policy',
+  terms: '/terms-and-conditions',
+} as const;

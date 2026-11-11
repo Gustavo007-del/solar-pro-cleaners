@@ -1,0 +1,5 @@
+{
+  "ios": {
+    "NSLocationWhenInUseUsageDescription": "Allow this app to capture the location you choose for your cleaning request."
+  }
+}
