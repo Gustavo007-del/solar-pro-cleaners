@@ -7,7 +7,7 @@ from app.api.dependencies import AppSettings, DatabaseSession
 from app.api.rate_limits import RATE_LIMITED, client_source, rate_limit
 from app.modules.admins.authentication import change_password, login
 from app.modules.admins.browser import clear_cookie, publish_tokens, refresh_input, require_browser_origin
-from app.modules.admins.dependencies import AuthenticatedAdmin, require_permission
+from app.modules.admins.dependencies import AdminRoute, AuthenticatedAdmin, require_permission
 from app.modules.admins.permissions import Permission
 from app.modules.admins.responses import prevent_caching
 from app.modules.admins.schemas import (
@@ -20,7 +20,8 @@ from app.schemas.common import AdminPage, ErrorResponse
 
 
 router = APIRouter(
-    prefix="/admin", tags=["admin"], dependencies=[Depends(prevent_caching)],
+    route_class=AdminRoute,
+    prefix="/admin", dependencies=[Depends(prevent_caching)],
     responses={
         401: {"model": ErrorResponse, "description": "Administrative authentication failed."},
         403: {"model": ErrorResponse, "description": "Administrative permission or origin denied."},
@@ -35,7 +36,7 @@ conflict = {409: {"model": ErrorResponse, "description": "Administrative account
 not_found = {404: {"model": ErrorResponse, "description": "Administrative account not found."}}
 
 
-@router.post("/auth/login", summary="Sign in to an administrative account", responses={429: {"model": ErrorResponse}})
+@router.post("/auth/login", tags=["Admin Authentication"], summary="Sign in to an administrative account", responses={429: {"model": ErrorResponse}})
 def sign_in(data: AdminLogin, db: DatabaseSession, settings: AppSettings, request: Request, response: Response) -> AdminAuthentication:
     if data.transport == "cookie":
         require_browser_origin(request, settings)
@@ -43,7 +44,7 @@ def sign_in(data: AdminLogin, db: DatabaseSession, settings: AppSettings, reques
     return publish_tokens(response, settings, login(db, settings, data, source), data.transport)
 
 
-@router.post("/auth/refresh", dependencies=[rate_limit("admin_refresh")], responses=RATE_LIMITED, summary="Rotate an administrative refresh token")
+@router.post("/auth/refresh", tags=["Admin Authentication"], dependencies=[rate_limit("admin_refresh")], responses=RATE_LIMITED, summary="Rotate an administrative refresh token")
 def refresh(
     db: DatabaseSession, settings: AppSettings, request: Request, response: Response, data: AdminRefresh | None = None,
 ) -> AdminAuthentication:
@@ -51,7 +52,7 @@ def refresh(
     return publish_tokens(response, settings, rotate_session(db, settings, secret, transport), transport)
 
 
-@router.post("/auth/logout", summary="Revoke the current admin session")
+@router.post("/auth/logout", tags=["Admin Authentication"], summary="Revoke the current admin session")
 def sign_out(
     db: DatabaseSession, admin: AuthenticatedAdmin, settings: AppSettings, request: Request, response: Response,
 ) -> AdminLogoutResponse:
@@ -63,7 +64,7 @@ def sign_out(
     return AdminLogoutResponse()
 
 
-@router.post("/auth/logout-all", summary="Revoke all sessions for the current admin")
+@router.post("/auth/logout-all", tags=["Admin Authentication"], summary="Revoke all sessions for the current admin")
 def sign_out_all(
     db: DatabaseSession, admin: AuthenticatedAdmin, settings: AppSettings, request: Request, response: Response,
 ) -> AdminLogoutResponse:
@@ -75,7 +76,7 @@ def sign_out_all(
     return AdminLogoutResponse()
 
 
-@router.post("/auth/change-password", dependencies=[rate_limit("admin_password")], responses=RATE_LIMITED, summary="Change the password and replace the current session")
+@router.post("/auth/change-password", tags=["Admin Authentication"], dependencies=[rate_limit("admin_password")], responses=RATE_LIMITED, summary="Change the password and replace the current session")
 def password_change(
     data: ChangePassword, db: DatabaseSession, admin: AuthenticatedAdmin, settings: AppSettings,
     request: Request, response: Response,
@@ -85,37 +86,37 @@ def password_change(
     return publish_tokens(response, settings, change_password(db, settings, admin, data), admin.transport)
 
 
-@router.get("/me", summary="Read the current administrative profile and permissions")
+@router.get("/me", tags=["Admin Authentication"], summary="Read the current administrative profile and permissions")
 def me(admin: AuthenticatedAdmin) -> AdminProfile:
     return admin.profile
 
 
-@router.patch("/me", summary="Update the current admin's name")
+@router.patch("/me", tags=["Admin Authentication"], summary="Update the current admin's name")
 def edit_me(data: AdminProfileUpdate, db: DatabaseSession, admin: AuthenticatedAdmin) -> AdminProfile:
     return update_self(db, admin, data.full_name)
 
 
-@router.get("/users", summary="List administrative accounts")
+@router.get("/users", tags=["Admin Users"], summary="List administrative accounts")
 def users(db: DatabaseSession, admin: Reader, query: Annotated[AdminUserQuery, Query()]) -> AdminPage[AdminUserResponse]:
     return list_users(db, query)
 
 
-@router.post("/users", status_code=201, summary="Create an admin or staff account",
+@router.post("/users", tags=["Admin Users"], status_code=201, summary="Create an admin or staff account",
              dependencies=[rate_limit("admin_create")], responses={**conflict, **RATE_LIMITED})
 def new_user(data: AdminUserCreate, db: DatabaseSession, settings: AppSettings, admin: Creator) -> AdminUserResponse:
     return create_user(db, settings, admin, data)
 
 
-@router.get("/users/{admin_id}", summary="Read an administrative account", responses=not_found)
+@router.get("/users/{admin_id}", tags=["Admin Users"], summary="Read an administrative account", responses=not_found)
 def user(admin_id: UUID, db: DatabaseSession, admin: Reader) -> AdminUserResponse:
     return read_user(db, admin_id)
 
 
-@router.patch("/users/{admin_id}", summary="Update an administrative account", responses={**not_found, **conflict})
+@router.patch("/users/{admin_id}", tags=["Admin Users"], summary="Update an administrative account", responses={**not_found, **conflict})
 def edit_user(admin_id: UUID, data: AdminUserUpdate, db: DatabaseSession, admin: Editor) -> AdminUserResponse:
     return update_user(db, admin, admin_id, data)
 
 
-@router.post("/users/{admin_id}/deactivate", summary="Deactivate an admin or staff account", responses={**not_found, **conflict})
+@router.post("/users/{admin_id}/deactivate", tags=["Admin Users"], summary="Deactivate an admin or staff account", responses={**not_found, **conflict})
 def deactivate(admin_id: UUID, db: DatabaseSession, admin: Deactivator) -> AdminUserResponse:
     return deactivate_user(db, admin, admin_id)

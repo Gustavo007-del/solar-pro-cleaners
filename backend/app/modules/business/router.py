@@ -10,7 +10,7 @@ from app.schemas.catalogue import PublicPageQuery
 from app.schemas.common import ErrorResponse
 
 router = APIRouter(
-    prefix="/business", tags=["business"],
+    prefix="/business", tags=["Business Information"],
     responses={404: {"model": ErrorResponse, "description": "Business information is unavailable."}},
 )
 

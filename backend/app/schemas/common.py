@@ -43,6 +43,7 @@ class AdminPage(Page[Item], Generic[Item]):
 class ValidationIssue(BaseModel):
     source: Literal["body", "query", "path", "header", "cookie", "request"]
     code: Literal["required", "invalid"]
+    field: str | None = None
 
 
 class ErrorDetail(BaseModel):

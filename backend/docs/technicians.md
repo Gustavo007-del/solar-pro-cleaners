@@ -40,12 +40,15 @@ Employment eligibility and approved leave take precedence. An eligible date-spec
 
 | Method and path | Permission | Input and response |
 | --- | --- | --- |
+| `GET /bookings/{booking_id}/eligible-technicians` | `technicians.assignments.manage` plus `bookings.assign` or `bookings.reassign` for the requested mode | Returns a paginated advisory picker with service date, timezone and `requires_in_progress_override`. |
 | `POST /bookings/{booking_id}/assign` | `bookings.assign` and `technicians.assignments.manage` | JSON `technician_id`, optional `note`. Returns `201` with the assignment. |
 | `POST /bookings/{booking_id}/reassign` | `bookings.reassign` and `technicians.assignments.manage` | JSON `new_technician_id`, `reassignment_reason`, optional `administrative_note` and `allow_in_progress`. Returns `201` with the replacement. |
 | `POST /bookings/{booking_id}/unassign` | `bookings.unassign` and `technicians.assignments.manage` | Optional `reason` and `allow_in_progress`. Returns the ended assignment. |
 | `GET /bookings/{booking_id}/assignments` | `technicians.assignments.read` | Paginated assignment history. |
 | `GET /technicians/{id}/assignments` | `technicians.assignments.read` | Paginated assignment history for that technician. |
 | `GET /technicians/workload` | `technicians.assignments.read` and `technicians.availability.read` | Paginated technician workload cards. |
+
+The picker accepts `mode=assign|reassign` (default assign), `search` (name substring), `page` and `page_size`. Results are sorted by name and ID and contain technician ID, name, city and scheduled times. Reassignment excludes the technician whose assignment is being replaced. The write rechecks eligibility, booking state and permissions under locks.
 
 Assignment history filters accept `assignment_status`, `date_from`, and `date_to` (inclusive requested service dates) and `sort=newest|oldest|completed`. Assignment records contain assignment, booking, technician, and assigning admin IDs, booking reference, technician name, service date, status, milestone timestamps, `ended_at`, `ended_by_admin_id`, `replaces_assignment_id`, reasons, and notes. Workload accepts technician list filters plus `date_from` and `date_to` for counts by requested service date. Effective availability always describes the current business-local time. Count fields are `active_assignments`, `completed_assignments`, `rejected_assignments`, and `cancelled_assignments`.
 
@@ -56,6 +59,8 @@ Assignment moves the booking to `assigned`. Acceptance is a separate future tech
 Owner has all permissions. Admin can read and manage profiles, availability, leave, and assignments. Owner alone can activate or deactivate a technician. Staff retains existing booking access with the current assignment summary, while technician management and assignment history require separate permissions. Audit logs store actor, action, resource, and safe metadata. Reasons and notes remain on their operational records.
 
 ## Future technician application
+
+See the [proposed technician client contract](./technician-client.md) for the reserved routes, schemas and identity boundary.
 
 The internal workflow service supports scoped job reads, acceptance, rejection, start, completion, and reporting inability to complete. Job reads return active assignments belonging to the technician and only the contact, location, and instructions needed for the job. Future callers must derive the technician ID from a dedicated technician session and enforce ownership before supplying it. Rejection or inability to complete returns the booking to confirmed. Starting and completing update both records and record technician attribution on booking history. Technician job transitions have no HTTP routes in this phase.
 

@@ -9,7 +9,7 @@ Paths below are relative to `/api/v1`. Requests with bodies use JSON. Success re
 | Endpoint | Request | Response |
 | --- | --- | --- |
 | `POST /bookings` | Creation body and optional `Idempotency-Key` header | `201` booking details. An identical retry returns `200` with the existing booking's current details. |
-| `GET /bookings/my` | Optional `page`, `page_size`, `sort` (`newest` or `oldest`), `status`, `date_from`, `date_to`, and `reference` | Page of the current customer's booking cards with `items`, `page`, `page_size`, and `total`. Date filters are inclusive requested service dates. Reference search is case-insensitive and partial. |
+| `GET /bookings/my` | Optional `page`, `page_size`, `sort` (`newest` or `oldest`), `status`, `date_from`, `date_to`, and `reference` | Page of the current customer's booking cards with shared pagination metadata. Date filters are inclusive requested service dates. Reference search is case-insensitive and partial. |
 | `GET /bookings/{booking_id}` | Booking UUID | `200` details for the owned booking. |
 | `POST /bookings/{booking_id}/cancel` | Booking UUID and optional body with `reason` | `200` updated details and appended cancellation history. Only pending bookings are eligible. |
 
@@ -38,7 +38,7 @@ The body rejects unexpected fields. Customer identity and contact snapshots come
 - A **booking card** contains `id`, `booking_reference`, `service_id`, `service_name`, `service_date`, `status`, `status_label`, `estimated_amount`, `currency`, `created_at`, and `address_summary`.
 - **Booking details** include every card field and `customer` (`full_name`, `phone_number`, `alternate_phone_number`), `address` (address fields plus `google_maps_url`), and `pricing` (`pricing_type`, `base_price`, `price_per_panel`, `minimum_charge`, `panel_quantity`, `estimated_amount`, `currency`). Details also include `customer_instructions`, `coverage_matched`, `updated_at`, `confirmed_at`, `assigned_at`, `started_at`, `completed_at`, `cancelled_at`, `cancellation_reason`, and ordered `history`.
 - A **history item** contains `old_status` (null at creation), `new_status`, `status_label`, and `created_at`. Unreached milestones have null timestamps. Private notes, actor IDs, pricing row IDs, and idempotency hashes are internal.
-- IDs and decimals serialize as strings. Dates and timestamps use ISO 8601. Optional values may be null. Manual bookings have a null Maps URL. GPS bookings include the free Maps URL for their stored coordinates. [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started)
+- IDs and monetary amounts serialize as strings. Coordinates serialize as numbers or null. Dates and timestamps use ISO 8601. Optional values may be null. Manual bookings have a null Maps URL. GPS bookings include the free Maps URL for their stored coordinates. [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started)
 
 Errors use the Phase 1 `error` envelope. Common cases are `401` for invalid authentication, `404` for an unavailable service or inaccessible booking, `422` for a past date, invalid payload or missing per-panel quantity, and `409` for a blocked date, idempotency conflict, or ineligible cancellation.
 

@@ -25,11 +25,16 @@ AdminEmail = Annotated[EmailStr, AfterValidator(normalize_email)]
 class AdminLogin(ConfigInput):
     email: AdminEmail
     password: Password
-    transport: Transport = "token"
+    transport: Transport = Field(
+        default="token",
+        description="Use cookie for the configured same-site browser dashboard. The refresh credential is set in an HttpOnly cookie.",
+    )
 
 
 class AdminRefresh(ConfigInput):
-    refresh_token: RefreshToken | None = None
+    refresh_token: RefreshToken | None = Field(
+        default=None, description="Supply for token transport. Omit the request body for cookie transport.",
+    )
 
 
 class ChangePassword(ConfigInput):

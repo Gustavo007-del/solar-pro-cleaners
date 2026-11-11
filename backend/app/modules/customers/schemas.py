@@ -30,10 +30,18 @@ class CustomerInput(BaseModel):
 
 
 class CustomerRegister(CustomerInput):
+    model_config = ConfigDict(json_schema_extra={"examples": [{
+        "full_name": "Example Customer",
+        "phone_number": "+919000000001",
+        "alternate_phone_number": None,
+        "installation_credential": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    }]})
     full_name: FullName
     phone_number: PhoneNumber
     alternate_phone_number: PhoneNumber | None = None
-    installation_credential: OpaqueSecret
+    installation_credential: OpaqueSecret = Field(
+        description="Canonical unpadded base64url from 32 CSPRNG bytes. The example credential is illustrative only."
+    )
     installation_label: InstallationLabel | None = None
 
 

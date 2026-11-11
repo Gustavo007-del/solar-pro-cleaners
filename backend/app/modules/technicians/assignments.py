@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -10,14 +10,16 @@ from app.modules.admins.permissions import AdminRole, Permission, enforce_permis
 from app.modules.admins.reporting_dates import business_zone
 from app.modules.admins.sessions import AdminContext, lock_authorized_admin
 from app.modules.bookings.models import Booking
-from app.modules.bookings.repository import lock_booking
+from app.modules.bookings.repository import lock_booking, not_found
 from app.modules.bookings.status import BookingStatus
 from app.modules.bookings.transitions import transition_locked_booking
 from app.modules.customers.credentials import utc_now
-from app.modules.technicians.availability import effective_availability
+from app.modules.technicians.availability import effective_availability, eligible_technicians
 from app.modules.technicians.models import BookingAssignment, Technician
 from app.modules.technicians.repository import assignment_record, lock_technicians
-from app.modules.technicians.schemas import AssignInput, AssignmentRecord, ReassignInput, UnassignInput
+from app.modules.technicians.schemas import (
+    AssignInput, AssignmentRecord, EligibleTechnicianQuery, EligibleTechniciansPage, ReassignInput, UnassignInput,
+)
 from app.modules.technicians.status import ACTIVE_ASSIGNMENTS, AssignmentStatus
 
 
@@ -35,12 +37,16 @@ def _latest_assignment(db: Session, booking_id: UUID) -> BookingAssignment | Non
     )
 
 
-def _require_eligible(db: Session, technician: Technician, service_date: date) -> None:
-    zone = business_zone(db)
-    now = utc_now().astimezone(zone)
+def _assignment_now(db: Session, service_date: date) -> datetime:
+    now = utc_now().astimezone(business_zone(db))
     if service_date < now.date():
         raise AppError(409, "assignment_date_past", "The requested service date is in the past.")
-    available = effective_availability(db, [technician], service_date, zone.key)[technician.id]
+    return now
+
+
+def _require_eligible(db: Session, technician: Technician, service_date: date) -> None:
+    now = _assignment_now(db, service_date)
+    available = effective_availability(db, [technician], service_date, now.tzinfo.key)[technician.id]
     if not available.available:
         reasons = {
             "employment": "The technician is not active for assignments.",
@@ -92,19 +98,64 @@ def assign_booking(db: Session, context: AdminContext, booking_id: UUID, data: A
     with db.begin():
         actor = _assignment_actor(db, context, Permission.BOOKINGS_ASSIGN)
         booking = lock_booking(db, booking_id, customer_id=None)
-        if booking.status != BookingStatus.CONFIRMED or current_assignment(db, booking.id) is not None:
-            raise AppError(409, "booking_not_assignable", "Only confirmed bookings without a current assignment can be assigned.")
+        _require_assignable(booking, current_assignment(db, booking.id))
         technician = lock_technicians(db, data.technician_id)[data.technician_id]
         _require_eligible(db, technician, booking.service_date)
         previous = _latest_assignment(db, booking.id)
         return _record_assignment(db, booking, technician, actor.id, data.note, previous=previous)
 
 
+def _require_assignable(booking: Booking, active: BookingAssignment | None) -> None:
+    if booking.status != BookingStatus.CONFIRMED or active is not None:
+        raise AppError(409, "booking_not_assignable", "Only confirmed bookings without a current assignment can be assigned.")
+
+
+def _replacement_target(db: Session, booking: Booking, active: BookingAssignment | None) -> BookingAssignment:
+    previous = active if active is not None else _latest_assignment(db, booking.id)
+    if previous is None or booking.status not in (BookingStatus.CONFIRMED, BookingStatus.ASSIGNED, BookingStatus.IN_PROGRESS):
+        raise AppError(409, "booking_not_reassignable", "The booking has no eligible assignment to replace.")
+    if active is None and booking.status != BookingStatus.CONFIRMED:
+        raise AppError(409, "assignment_state_conflict", "The booking has no current assignment.")
+    if active is not None and booking.status == BookingStatus.CONFIRMED:
+        raise AppError(409, "assignment_state_conflict", "The booking and assignment are out of sync.")
+    return previous
+
+
+def _work_started(booking: Booking, assignment: BookingAssignment) -> bool:
+    return booking.status == BookingStatus.IN_PROGRESS or assignment.assignment_status == AssignmentStatus.IN_PROGRESS
+
+
+def assignment_candidates(
+    db: Session, context: AdminContext, booking_id: UUID, query: EligibleTechnicianQuery,
+) -> EligibleTechniciansPage:
+    permission = Permission.BOOKINGS_ASSIGN if query.mode == "assign" else Permission.BOOKINGS_REASSIGN
+    enforce_permission(context.profile.role, permission)
+    booking = db.get(Booking, booking_id)
+    if booking is None:
+        raise not_found()
+    active = current_assignment(db, booking.id)
+    excluded = None
+    if query.mode == "assign":
+        _require_assignable(booking, active)
+    else:
+        excluded = _replacement_target(db, booking, active).technician_id
+
+    now = _assignment_now(db, booking.service_date)
+    page = eligible_technicians(
+        db, booking.service_date, now.time() if booking.service_date == now.date() else None,
+        query, exclude_id=excluded,
+    )
+    return EligibleTechniciansPage(
+        items=page.items, total=page.total, page=page.page, page_size=page.page_size,
+        service_date=booking.service_date, timezone=now.tzinfo.key,
+        requires_in_progress_override=active is not None and _work_started(booking, active),
+    )
+
+
 def _require_explicit_work_override(
     booking: Booking, assignment: BookingAssignment, allow_in_progress: bool, reason: str | None,
 ) -> None:
-    working = booking.status == BookingStatus.IN_PROGRESS or assignment.assignment_status == AssignmentStatus.IN_PROGRESS
-    if working and (not allow_in_progress or not reason):
+    if _work_started(booking, assignment) and (not allow_in_progress or not reason):
         raise AppError(409, "assignment_in_progress", "Work has started. Explicitly allow the change and supply a reason.")
 
 
@@ -113,13 +164,7 @@ def reassign_booking(db: Session, context: AdminContext, booking_id: UUID, data:
         actor = _assignment_actor(db, context, Permission.BOOKINGS_REASSIGN)
         booking = lock_booking(db, booking_id, customer_id=None)
         active = current_assignment(db, booking.id)
-        previous = active if active is not None else _latest_assignment(db, booking.id)
-        if previous is None or booking.status not in (BookingStatus.CONFIRMED, BookingStatus.ASSIGNED, BookingStatus.IN_PROGRESS):
-            raise AppError(409, "booking_not_reassignable", "The booking has no eligible assignment to replace.")
-        if active is None and booking.status != BookingStatus.CONFIRMED:
-            raise AppError(409, "assignment_state_conflict", "The booking has no current assignment.")
-        if active is not None and booking.status == BookingStatus.CONFIRMED:
-            raise AppError(409, "assignment_state_conflict", "The booking and assignment are out of sync.")
+        previous = _replacement_target(db, booking, active)
         if previous.technician_id == data.new_technician_id:
             raise AppError(409, "same_technician", "Choose a different technician for reassignment.")
         if active is not None:

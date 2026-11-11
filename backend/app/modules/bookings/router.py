@@ -13,7 +13,7 @@ from app.modules.customers.dependencies import AuthenticatedCustomer
 from app.schemas.common import ErrorResponse, Page
 
 router = APIRouter(
-    prefix="/bookings", tags=["bookings"],
+    prefix="/bookings", tags=["Bookings"],
     responses={401: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
 )
 not_found = {404: {"model": ErrorResponse, "description": "The requested booking or service is unavailable."}}

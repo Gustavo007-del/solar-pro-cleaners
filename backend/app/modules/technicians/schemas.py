@@ -11,7 +11,7 @@ from app.modules.customers.schemas import FullName, PhoneNumber
 from app.modules.locations.validators import AddressLine
 from app.modules.technicians.status import AssignmentStatus, AvailabilityStatus, EmploymentStatus
 from app.schemas.catalogue import ConfigInput, PostalCode, PublicPageQuery, PublicRecord, Text120
-from app.schemas.common import AdminPage
+from app.schemas.common import AdminPage, Page
 
 LongNote = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 
@@ -225,6 +225,25 @@ class ReassignInput(ConfigInput):
 class UnassignInput(ConfigInput):
     reason: Note | None = None
     allow_in_progress: StrictBool = False
+
+
+class EligibleTechnicianQuery(PublicPageQuery):
+    mode: Literal["assign", "reassign"] = "assign"
+    search: Text120 | None = None
+
+
+class EligibleTechnician(PublicRecord):
+    id: UUID
+    full_name: str
+    city: str | None
+    start_time: time | None
+    end_time: time | None
+
+
+class EligibleTechniciansPage(Page[EligibleTechnician]):
+    service_date: date
+    timezone: str
+    requires_in_progress_override: bool
 
 
 class AssignmentRecord(PublicRecord):

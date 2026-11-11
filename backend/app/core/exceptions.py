@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping
 
 from fastapi import FastAPI, Request
@@ -18,6 +19,7 @@ HTTP_ERRORS = {
     409: ("conflict", "The request conflicts with the current state of the resource."),
     429: ("rate_limited", "Too many requests. Please try again later."),
 }
+FIELD_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_-]{0,63}")
 VALIDATION_SOURCES = {"body", "query", "path", "header", "cookie"}
 
 
@@ -71,7 +73,15 @@ def register_exception_handlers(app: FastAPI) -> None:
             location = error.get("loc", ())
             source = location[0] if location and location[0] in VALIDATION_SOURCES else "request"
             code = "required" if error.get("type") == "missing" else "invalid"
-            issues.append(ValidationIssue(source=source, code=code))
+            field = None
+            if source in {"body", "query", "path", "header"} and error.get("type") != "extra_forbidden":
+                parts = location[1:]
+                if parts and len(parts) <= 5 and all(
+                    isinstance(part, int) or isinstance(part, str) and FIELD_NAME.fullmatch(part)
+                    for part in parts
+                ):
+                    field = ".".join(map(str, parts))
+            issues.append(ValidationIssue(source=source, code=code, field=field))
         return error_response(
             request.scope, 422, "validation_error",
             "Check the required fields and the format of your request.", details=issues,

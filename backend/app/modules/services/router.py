@@ -9,7 +9,7 @@ from app.modules.services.schemas import ServiceDetails, ServiceQuery, ServiceSu
 from app.modules.services.service import list_services, read_service, read_service_price
 from app.schemas.common import ErrorResponse, Page
 
-router = APIRouter(prefix="/services", tags=["services"])
+router = APIRouter(prefix="/services", tags=["Services"])
 not_found = {404: {"model": ErrorResponse, "description": "The service is unavailable."}}
 
 

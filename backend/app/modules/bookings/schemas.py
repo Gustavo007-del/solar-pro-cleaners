@@ -5,7 +5,7 @@ from hashlib import sha256
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BeforeValidator, Field, ModelWrapValidatorHandler, PrivateAttr, StringConstraints, model_validator
+from pydantic import BeforeValidator, ConfigDict, Field, ModelWrapValidatorHandler, PrivateAttr, StringConstraints, model_validator
 
 from app.modules.availability.schemas import parse_requested_date
 from app.modules.bookings.status import BookingStatus
@@ -23,6 +23,12 @@ class BookingPricingInput(ConfigInput):
 
 
 class BookingCreate(ConfigInput):
+    model_config = ConfigDict(json_schema_extra={"examples": [{
+        "service_id": "00000000-0000-4000-8000-000000000001",
+        "service_date": "2030-06-20",
+        "address": {"address_line": "10 Example Road", "postal_code": "682001", "location_source": "manual"},
+        "pricing": {"panel_quantity": 12},
+    }]})
     service_id: UUID
     service_date: CalendarDate
     address: AddressInput | None = None

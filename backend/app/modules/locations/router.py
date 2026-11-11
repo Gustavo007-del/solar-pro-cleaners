@@ -9,8 +9,8 @@ from app.modules.locations.service import check_coverage, evaluate_coverage, lis
 from app.schemas.catalogue import PublicPageQuery
 from app.schemas.common import Page
 
-router = APIRouter(prefix="/service-areas", tags=["service areas"])
-location_router = APIRouter(prefix="/locations", tags=["locations"])
+router = APIRouter(prefix="/service-areas", tags=["Service Areas"])
+location_router = APIRouter(prefix="/locations", tags=["Locations"])
 
 
 @router.get("", summary="List active service areas")

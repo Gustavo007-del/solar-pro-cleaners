@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies import DatabaseSession
 from app.api.rate_limits import RATE_LIMITED, rate_limit
-from app.modules.admins.dependencies import require_permission
+from app.modules.admins.dependencies import AdminRoute, require_permission
 from app.modules.admins.permissions import Permission
 from app.modules.admins.responses import prevent_caching
 from app.modules.admins.sessions import AdminContext
@@ -18,7 +18,8 @@ from app.modules.customers.schemas import CustomerProfile
 from app.schemas.common import AdminPage, ErrorResponse
 
 router = APIRouter(
-    prefix="/admin/customers", tags=["admin customers"], dependencies=[Depends(prevent_caching)],
+    route_class=AdminRoute,
+    prefix="/admin/customers", tags=["Admin Customers"], dependencies=[Depends(prevent_caching)],
     responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
 )
 Reader = Annotated[AdminContext, Depends(require_permission(Permission.CUSTOMERS_READ))]
@@ -41,6 +42,7 @@ def customer(
 
 @router.patch(
     "/{customer_id}", summary="Update customer contact details or account state",
+    description="Changing account state also requires customers.activate or customers.deactivate, as applicable.",
     dependencies=[rate_limit("admin_customer_update")],
     responses={**RATE_LIMITED, 409: {"model": ErrorResponse, "description": "The primary phone is already in use."}},
 )

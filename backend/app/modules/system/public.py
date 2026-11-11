@@ -15,7 +15,7 @@ from app.core.database import Database
 from app.modules.business.schemas import BusinessPhone, SupportEmail
 from app.modules.business.service import find_active_business
 
-api = APIRouter(tags=["public information"])
+api = APIRouter(tags=["Business Information"])
 web = APIRouter(include_in_schema=False)
 logger = logging.getLogger(__name__)
 page = Template(Path(__file__).with_name("public_page.html").read_text(encoding="utf-8"))

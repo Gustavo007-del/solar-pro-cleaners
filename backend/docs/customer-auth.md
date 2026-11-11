@@ -23,7 +23,7 @@ A **profile** contains `id` (UUID string), `full_name`, `phone_number`, `alterna
 
 Names are trimmed, limited to 100 characters, and accept Malayalam and other Unicode letters. Indian mobile numbers normalize to `+91` followed by ten digits. The backend accepts the local ten-digit form and the `+91`, `0091`, and bare `91` prefixes. Spaces and hyphens may separate digits. Omit the alternate number or send JSON `null` during registration. On PATCH, omission preserves an existing field and `null` clears the alternate number. Unexpected fields fail validation.
 
-Errors use `{"error":{"code":"…","message":"…","request_id":"…"}}`. Validation failures may also include an `error.details` array of safe `source` and `code` objects.
+Errors use `{"error":{"code":"…","message":"…","request_id":"…"}}`. Validation failures may also include an `error.details` array of safe `source` and `code` objects with a field path when available.
 
 | Status | Meaning |
 | --- | --- |

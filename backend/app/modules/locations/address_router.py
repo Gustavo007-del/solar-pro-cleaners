@@ -14,7 +14,7 @@ from app.schemas.catalogue import PublicPageQuery
 from app.schemas.common import ErrorResponse, Page
 
 router = APIRouter(
-    prefix="/customers/me/addresses", tags=["saved addresses"],
+    prefix="/customers/me/addresses", tags=["Customer Addresses"],
     responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 503: {"model": ErrorResponse}},
 )
 

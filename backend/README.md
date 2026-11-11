@@ -18,6 +18,8 @@ As a feature grows, keep its routes, schemas, models, service logic, and any rep
 
 ## Configuration and API
 
+The [frontend integration guide](./docs/integration.md) maps the Expo and Next.js screens to the live API contract. It links to the proposed technician app contract.
+
 `requirements.txt` defines the supported dependency ranges for Python 3.12 or 3.13. `.env.example` documents the server configuration. Backend settings read `backend/.env` and accept overrides from process environment variables. Staging and production require PostgreSQL with TLS, trusted hosts, and independent customer, admin and rate-limit secrets. Interactive API documentation is available in development.
 
 - `GET /health` and `GET /api/v1/health` report process liveness.

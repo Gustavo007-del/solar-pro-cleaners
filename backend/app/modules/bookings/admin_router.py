@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query, Response
 
 from app.api.dependencies import DatabaseSession
 from app.api.rate_limits import RATE_LIMITED, rate_limit
-from app.modules.admins.dependencies import require_permission
+from app.modules.admins.dependencies import AdminRoute, require_permission
 from app.modules.admins.permissions import Permission
 from app.modules.admins.responses import prevent_caching
 from app.modules.admins.sessions import AdminContext
@@ -21,7 +21,8 @@ from app.schemas.catalogue import PublicPageQuery
 from app.schemas.common import AdminPage, ErrorResponse
 
 router = APIRouter(
-    prefix="/admin/bookings", tags=["admin bookings"], dependencies=[Depends(prevent_caching)],
+    route_class=AdminRoute,
+    prefix="/admin/bookings", tags=["Admin Bookings"], dependencies=[Depends(prevent_caching)],
     responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 404: {"model": ErrorResponse}},
 )
 BookingReader = Annotated[AdminContext, Depends(require_permission(Permission.BOOKINGS_READ))]
@@ -44,7 +45,8 @@ def booking(booking_id: UUID, db: DatabaseSession, admin: BookingReader) -> Admi
     return read_admin_booking(db, booking_id, show_private_notes=Permission.BOOKINGS_NOTES_READ in admin.profile.permissions)
 
 
-@router.patch("/{booking_id}/status", summary="Apply a permitted booking status transition", responses=conflict)
+@router.patch("/{booking_id}/status", summary="Apply a permitted booking status transition", responses=conflict,
+              description="Cancelling through this operation also requires bookings.cancel.")
 def status(booking_id: UUID, data: AdminBookingStatusUpdate, db: DatabaseSession, admin: BookingEditor) -> AdminBookingDetails:
     return change_booking_status(db, admin, booking_id, data.status, reason=data.reason)
 

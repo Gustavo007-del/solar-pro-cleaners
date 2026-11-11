@@ -5,7 +5,7 @@ from app.api.dependencies import AppSettings, DatabaseSession
 from app.modules.system.schemas import ApplicationInfo, HealthResponse, ReadinessResponse
 from app.schemas.common import ErrorResponse
 
-router = APIRouter(tags=["system"])
+router = APIRouter(tags=["System"])
 operations = APIRouter()
 
 
