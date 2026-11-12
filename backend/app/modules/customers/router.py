@@ -19,7 +19,6 @@ def prevent_caching(response: Response) -> None:
 
 router = APIRouter(
     prefix="/customers",
-   
     dependencies=[Depends(prevent_caching)],
     responses={
         401: {"model": ErrorResponse, "description": "Customer authentication failed."},

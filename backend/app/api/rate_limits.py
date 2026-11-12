@@ -13,7 +13,13 @@ Category = Literal[
     "customer_register", "customer_login", "customer_refresh", "admin_refresh", "booking_create",
     "booking_cancel", "admin_booking_cancel", "customer_update", "admin_customer_update", "admin_create", "admin_password",
 ]
-RATE_LIMITED = {429: {"model": ErrorResponse, "description": "Retry after the time in Retry-After."}}
+RATE_LIMITED = {429: {
+    "model": ErrorResponse,
+    "description": "Too many requests.",
+    "headers": {
+        "Retry-After": {"schema": {"type": "integer", "minimum": 1}, "description": "Seconds before retrying."},
+    },
+}}
 
 
 def client_source(request: Request) -> str:

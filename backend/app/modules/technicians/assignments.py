@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -37,16 +38,17 @@ def _latest_assignment(db: Session, booking_id: UUID) -> BookingAssignment | Non
     )
 
 
-def _assignment_now(db: Session, service_date: date) -> datetime:
-    now = utc_now().astimezone(business_zone(db))
+def _assignment_clock(db: Session, service_date: date) -> tuple[datetime, ZoneInfo]:
+    zone = business_zone(db)
+    now = utc_now().astimezone(zone)
     if service_date < now.date():
         raise AppError(409, "assignment_date_past", "The requested service date is in the past.")
-    return now
+    return now, zone
 
 
 def _require_eligible(db: Session, technician: Technician, service_date: date) -> None:
-    now = _assignment_now(db, service_date)
-    available = effective_availability(db, [technician], service_date, now.tzinfo.key)[technician.id]
+    now, zone = _assignment_clock(db, service_date)
+    available = effective_availability(db, [technician], service_date, zone.key)[technician.id]
     if not available.available:
         reasons = {
             "employment": "The technician is not active for assignments.",
@@ -140,14 +142,14 @@ def assignment_candidates(
     else:
         excluded = _replacement_target(db, booking, active).technician_id
 
-    now = _assignment_now(db, booking.service_date)
+    now, zone = _assignment_clock(db, booking.service_date)
     page = eligible_technicians(
         db, booking.service_date, now.time() if booking.service_date == now.date() else None,
         query, exclude_id=excluded,
     )
     return EligibleTechniciansPage(
         items=page.items, total=page.total, page=page.page, page_size=page.page_size,
-        service_date=booking.service_date, timezone=now.tzinfo.key,
+        service_date=booking.service_date, timezone=zone.key,
         requires_in_progress_override=active is not None and _work_started(booking, active),
     )
 

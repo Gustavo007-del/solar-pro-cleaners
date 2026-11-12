@@ -34,7 +34,7 @@ class CustomerRegister(CustomerInput):
         "full_name": "Example Customer",
         "phone_number": "+919000000001",
         "alternate_phone_number": None,
-        "installation_credential": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "installation_credential": "<generate-and-store-a-base64url-credential>",
     }]})
     full_name: FullName
     phone_number: PhoneNumber

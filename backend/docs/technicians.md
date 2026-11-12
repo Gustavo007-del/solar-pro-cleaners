@@ -34,7 +34,7 @@ Deactivation blocks new assignments. When active assignments exist, resolve them
 
 A schedule input uses exactly one of `availability_date` or `day_of_week` (0 Monday through 6 Sunday), plus `availability_status` and optional `reason`. The status is `available`, `unavailable`, `on_leave`, or `temporarily_unavailable`. Available entries may specify `start_time` and `end_time` as ordered, same-day business-local times, or omit both for the full day. Other entries omit both. Time intervals do not create booking slots. Schedule and leave responses add IDs and timestamps.
 
-Employment eligibility and approved leave take precedence. An eligible date-specific entry overrides its recurring weekday entry. Missing schedules mean unconfigured availability. Current workload availability also accounts for an existing assignment and whether local time is within scheduled hours. Approved leave cannot be added or extended over active assignments. Leave ranges are inclusive and overlapping records return `409`. Schedule edits retain existing assignments. Business timezone comes from the active business profile, with Asia/Kolkata as fallback.
+Employment eligibility and approved leave take precedence. An eligible date-specific entry overrides its recurring weekday entry. Missing schedules mean unconfigured availability. Current workload availability also accounts for an existing assignment and whether local time is within scheduled hours. Approved leave cannot be added or extended over active assignments. Leave ranges are inclusive and overlapping records return `409`. Schedule edits retain existing assignments. Business timezone comes from the active business profile, with `BUSINESS_TIMEZONE` as fallback (defaults to Asia/Kolkata).
 
 ## Booking assignments
 

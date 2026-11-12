@@ -36,7 +36,7 @@ conflict = {409: {"model": ErrorResponse, "description": "Administrative account
 not_found = {404: {"model": ErrorResponse, "description": "Administrative account not found."}}
 
 
-@router.post("/auth/login", tags=["Admin Authentication"], summary="Sign in to an administrative account", responses={429: {"model": ErrorResponse}})
+@router.post("/auth/login", tags=["Admin Authentication"], summary="Sign in to an administrative account", responses=RATE_LIMITED)
 def sign_in(data: AdminLogin, db: DatabaseSession, settings: AppSettings, request: Request, response: Response) -> AdminAuthentication:
     if data.transport == "cookie":
         require_browser_origin(request, settings)
