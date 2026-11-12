@@ -35,7 +35,7 @@ type PushState = {
 const PushContext = createContext<PushState | undefined>(undefined);
 
 // The runtime SDK includes the common Expo permission fields on both platforms.
-type PermissionResult = Notifications.NotificationPermissionsStatus & {
+type PermissionResult = Pick<Notifications.NotificationPermissionsStatus, 'ios'> & {
   granted: boolean;
   status: Permission;
   canAskAgain: boolean;

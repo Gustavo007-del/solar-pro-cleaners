@@ -11,7 +11,7 @@ export const businessContact = {
   legalName: appConfig.business.legalName,
   privacyUrl: getWebUrl(appConfig.business.privacyUrl) ?? publicPage('/privacy-policy'),
   termsUrl: getWebUrl(appConfig.business.termsUrl),
-  deletionUrl: getWebUrl(appConfig.business.deletionUrl) ?? publicPage('/contact-us'),
+  deletionUrl: getWebUrl(appConfig.business.deletionUrl) ?? publicPage('/delete-account'),
 };
 
 export type BusinessContactAction = 'call' | 'whatsapp';

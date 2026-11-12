@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 page = Template(Path(__file__).with_name("public_page.html").read_text(encoding="utf-8"))
 public_email = TypeAdapter(SupportEmail)
 public_phone = TypeAdapter(BusinessPhone)
+default_deletion_phone = "+919061444017"
 
 
 class PrivacySection(BaseModel):
@@ -126,6 +127,8 @@ def public_home() -> HTMLResponse:
             <span>How we handle your account, booking and location information.</span></a>
           <a class="card" href="/contact-us"><strong>Contact Us</strong>
             <span>Get help with a cleaning visit, your account or a privacy request.</span></a>
+          <a class="card" href="/delete-account"><strong>Request account deletion</strong>
+            <span>Ask us to delete your Solar Care account and associated data.</span></a>
         </div>
     """)
 
@@ -141,6 +144,7 @@ def privacy_page(settings: AppSettings) -> HTMLResponse:
         <h1>{escape(policy.title)}</h1>
         <p class="muted">{status}</p>
         {sections}
+        <p><a href="/delete-account">Request account and data deletion</a></p>
         <p><a href="/contact-us">Contact us about privacy</a></p>
     """)
 
@@ -163,6 +167,39 @@ def contact_page(request: Request) -> HTMLResponse:
         <h1>Contact Us</h1>
         <p class="muted">{escape(contact.business_name)}</p>
         {listing}
+        <p><a href="/delete-account">Request account and data deletion</a></p>
         <p><a href="/privacy-policy">Read our Privacy Policy</a></p>
+    """)
+
+
+@web.api_route("/delete-account", methods=["GET", "HEAD"])
+def delete_account_page(request: Request) -> HTMLResponse:
+    contact = published_contact(request)
+    subject = "Solar Care account and data deletion request"
+    message = "I would like to request deletion of my Solar Care account and associated data."
+    whatsapp = f"https://wa.me/{default_deletion_phone[1:]}?text={quote(message)}"
+    phone = contact.primary_phone or default_deletion_phone
+    email_option = ""
+    if contact.support_email:
+        email = quote(contact.support_email, safe="@")
+        email_link = f"mailto:{email}?subject={quote(subject)}&body={quote(message)}"
+        email_option = f'<li><a href="{escape(email_link)}">Email a deletion request</a></li>'
+
+    return render("Request account deletion", f"""
+        <h1>Request account and data deletion</h1>
+        <p>Use one of the options below to ask Solar Care to delete your account and associated data.
+          You can request deletion even if you’ve uninstalled the app.</p>
+        <ul>
+          <li><a href="{escape(whatsapp)}">Send a deletion request on WhatsApp</a></li>
+          {email_option}
+          <li><a href="tel:{escape(phone)}">Call Solar Care support at {escape(phone)}</a></li>
+        </ul>
+        <p>Include the phone number registered with your Solar Care account so support can find it.
+          We’ll verify that the account belongs to you before processing the request.</p>
+        <h2>What happens to your data</h2>
+        <p>We’ll process your request for your account and associated data, including saved addresses and
+          notification registrations. Some records may be kept where required for legal, security or dispute
+          resolution reasons. Support will explain what applies to your request and confirm the outcome.</p>
+        <p><a href="/privacy-policy">Read the Solar Care Privacy Policy</a></p>
     """)
 
