@@ -13,6 +13,7 @@ import { AppCard } from '@/components/surfaces/AppCard';
 import { appMetadata } from '@/constants/metadata';
 import { appRoutes } from '@/constants/routes';
 import { AccountMenu } from '@/features/account/components/AccountMenu';
+import { NotificationSettings } from '@/features/notifications/NotificationSettings';
 import { useAppLanguage } from '@/hooks/useAppLanguage';
 import { useSaveAction } from '@/hooks/useSaveAction';
 import { useApiMessage } from '@/hooks/useApiMessage';
@@ -48,6 +49,7 @@ export function SettingsScreen() {
       <ScrollContainer contentContainerStyle={styles.content}>
         <Entrance variant="fade" style={styles.group}>
           <SectionHeader title={t('settings.preferences')} />
+          <NotificationSettings />
           <AppCard>
             <SectionHeader title={t('settings.language')} />
             <View accessibilityRole="radiogroup" style={styles.group}>

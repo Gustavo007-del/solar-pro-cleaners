@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.heroLine,
   },
-  copy: { gap: spacing.xxs },
+  copy: { width: '100%', maxWidth: sizes.screenMaxWidth, gap: spacing.xxs },
   title: { color: colors.surface, textAlign: 'center' },
   tagline: { color: colors.onHero, textAlign: 'center' },
   status: { alignItems: 'center', gap: spacing.md },

@@ -7,7 +7,6 @@ import type { BookingAddressSelection, CreateBookingInput } from '@/services/boo
 type BookingDraft = {
   captured: CapturedLocation | null;
   addressText: string;
-  instructions: string;
   serviceId?: string;
   serviceDate?: string;
   panelQuantity?: string;
@@ -42,7 +41,6 @@ export function useBookingDraft(customerId: string) {
   const [draft, setDraft] = useState<BookingDraft>(() => sessionDrafts.get(customerId) ?? {
     captured: null,
     addressText: '',
-    instructions: '',
   });
   const currentDraft = useRef(draft);
 

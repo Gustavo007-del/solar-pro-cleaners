@@ -7,6 +7,7 @@ import { PrimaryButton, TextButton } from '@/components/buttons/Buttons';
 import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
 import { Entrance } from '@/components/motion/Entrance';
 import { useSaveAction } from '@/hooks/useSaveAction';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
 
@@ -17,6 +18,7 @@ const scenes = ['cleaning', 'booking', 'location'] as const satisfies readonly O
 
 export function OnboardingScreen() {
   const { t } = useTranslation();
+  const { height } = useScreenLayout();
   const { finishOnboarding } = useApplication();
   const { pending, failed, save } = useSaveAction();
   const [index, setIndex] = useState(0);
@@ -35,7 +37,7 @@ export function OnboardingScreen() {
           <TextButton label={t('common.skip')} compact disabled={pending} onPress={() => { void save(finishOnboarding); }} />
         </View>
         <Entrance key={scene} variant="horizontal" style={styles.page}>
-          <View style={styles.art}>
+          <View style={[styles.art, { maxWidth: Math.min(sizes.onboardingArtMaxWidth, height * 0.46) }]}>
             <OnboardingArt scene={scene} />
           </View>
           <View style={styles.copy}>
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
   art: {
     alignSelf: 'center',
     width: '100%',
-    maxWidth: sizes.onboardingArtMaxWidth,
     aspectRatio: 1.5,
     borderRadius: radius.xxl,
     overflow: 'hidden',

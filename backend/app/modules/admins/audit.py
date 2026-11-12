@@ -16,6 +16,8 @@ AuditAction = Literal[
     "technician_created", "technician_updated", "technician_activated", "technician_deactivated",
     "technician_availability_changed", "technician_leave_created", "technician_leave_updated",
     "technician_leave_deleted", "booking_assigned", "booking_reassigned", "booking_unassigned",
+    "notification_created", "notification_updated", "notification_deleted", "notification_send",
+    "notification_schedule", "notification_pause", "notification_resume", "notification_cancel",
 ]
 AccountReason = Literal["customer_request", "account_review", "policy", "other"]
 CustomerField = Literal["full_name", "phone_number", "alternate_phone_number"]

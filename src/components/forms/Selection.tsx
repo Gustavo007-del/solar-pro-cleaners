@@ -74,8 +74,8 @@ export function SelectionCard({ label, description, selected, onSelect, disabled
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: sizes.touchTarget },
-  copy: { flex: 1 },
-  label: { flexShrink: 1, color: colors.ink },
+  copy: { flex: 1, minWidth: 0 },
+  label: { flexShrink: 1, minWidth: 0, color: colors.ink },
   disabled: { opacity: 0.55 },
   checkbox: {
     alignItems: 'center',

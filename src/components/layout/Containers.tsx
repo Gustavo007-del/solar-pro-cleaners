@@ -1,8 +1,9 @@
 import type { PropsWithChildren } from 'react';
-import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View, type ScrollViewProps, type ViewProps } from 'react-native';
 import { SafeAreaView, type SafeAreaViewProps } from 'react-native-safe-area-context';
 
 import { colors, sizes, spacing } from '@/theme';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 
 export function SafeAreaWrapper({ style, ...props }: SafeAreaViewProps) {
   return <SafeAreaView {...props} style={[styles.safeArea, style]} />;
@@ -19,12 +20,23 @@ export function ScreenContainer({ edges, style, children, ...props }: ScreenCont
 }
 
 export function ScrollContainer({ style, contentContainerStyle, ...props }: ScrollViewProps) {
+  const { screenMargin } = useScreenLayout();
   return (
     <ScrollView
       keyboardShouldPersistTaps="handled"
       {...props}
       style={[styles.scroll, style]}
-      contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+      contentContainerStyle={[styles.scrollContent, { paddingHorizontal: screenMargin }, contentContainerStyle]}
+    />
+  );
+}
+
+export function FormScrollContainer(props: ScrollViewProps) {
+  return (
+    <ScrollContainer
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+      keyboardDismissMode="on-drag"
+      {...props}
     />
   );
 }
@@ -41,6 +53,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.canvas },
   screen: { flex: 1, width: '100%', maxWidth: sizes.screenMaxWidth, alignSelf: 'center' },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: sizes.screenMargin, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  scrollContent: { paddingTop: spacing.md, paddingBottom: spacing.xl },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
 });

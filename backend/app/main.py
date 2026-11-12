@@ -53,6 +53,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             {"name": "Admin Bookings", "description": "Protected booking administration and internal notes."},
             {"name": "Admin Customers", "description": "Protected customer and saved-address management."},
             {"name": "Admin Dashboard", "description": "Operational summaries and booking analytics."},
+            {"name": "Admin notifications", "description": "Push campaigns, scheduling and delivery history."},
+            {"name": "Customer notifications", "description": "Device registration and notification preferences."},
             {"name": "Technicians", "description": "Technician profiles, workload, and assignment history."},
             {"name": "Technician Availability", "description": "Dated and weekly availability and leave."},
             {"name": "Booking Assignments", "description": "Booking assignment, reassignment, removal, and history."},

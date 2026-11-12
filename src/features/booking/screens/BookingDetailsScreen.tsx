@@ -15,7 +15,7 @@ import { useSaveAction } from '@/hooks/useSaveAction';
 import { ServicePricing } from '@/features/home/components/ServicePricing';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { bookingService } from '@/services/bookings/bookingService';
-import { openPhoneDialer } from '@/services/contact/externalLinks';
+import { normalizeInternationalPhone, openPhoneDialer } from '@/services/contact/externalLinks';
 import { colors, spacing, typography } from '@/theme';
 import type { Booking } from '@/types/booking';
 
@@ -91,10 +91,22 @@ function BookingDetails({ booking, onChange }: { booking: Booking; onChange: () 
   }
 
   const [callFailed, setCallFailed] = useState(false);
+  const technician = cancelled ? null : booking.technician;
+  const technicianPhone = normalizeInternationalPhone(technician?.phone);
+  const showTechnician = !cancelled && booking.status !== 'cancelled' && booking.status !== 'completed';
+  const technicianAssigned = booking.status === 'assigned' || booking.status === 'in_progress';
+  const milestones = [
+    { label: t('booking.details.submittedAt'), date: booking.createdAt },
+    { label: t('booking.details.confirmedAt'), date: booking.confirmedAt },
+    { label: t('booking.details.assignedAt'), date: booking.assignedAt },
+    { label: t('booking.details.startedAt'), date: booking.startedAt },
+    { label: t('booking.details.completedAt'), date: booking.completedAt },
+    { label: t('integration.cancelledAt'), date: cancelled?.cancelledAt ?? booking.cancelledAt },
+  ];
 
-  async function callCustomer() {
+  async function callTechnician() {
     setCallFailed(false);
-    if ((await openPhoneDialer(booking.primaryPhone)) !== 'opened') setCallFailed(true);
+    if ((await openPhoneDialer(technicianPhone)) !== 'opened') setCallFailed(true);
   }
 
   return (
@@ -129,13 +141,20 @@ function BookingDetails({ booking, onChange }: { booking: Booking; onChange: () 
       </View>
       <CustomerDetailsCard
         details={{ fullName: booking.customerName, primaryPhone: booking.primaryPhone, alternatePhone: booking.alternatePhone }}
-        action={(
-          <View style={styles.group}>
-            <OutlineButton compact icon={Phone} label={t('booking.details.call')} onPress={() => { void callCustomer(); }} />
-            {callFailed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{t('home.support.callError')}</Text>}
-          </View>
-        )}
       />
+      {showTechnician && <AppCard>
+        <SectionHeader title={t('booking.details.technician')} />
+        {technician ? <>
+          <Text style={typography.body}>{technician.fullName}</Text>
+          {technicianPhone && <>
+            <Text selectable style={typography.body}>{technicianPhone}</Text>
+            <OutlineButton compact icon={Phone} label={t('booking.details.call')} onPress={() => { void callTechnician(); }} />
+            {callFailed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{t('home.support.callError')}</Text>}
+          </>}
+        </> : <Text style={typography.body}>
+          {t(technicianAssigned ? 'booking.details.technicianUnavailable' : 'booking.details.technicianPending')}
+        </Text>}
+      </AppCard>}
       {booking.location ? <BookingLocationDetails location={booking.location} /> : <AppCard>
         <SectionHeader title={t('booking.details.location')} />
         <Text style={typography.body}>{t('booking.form.locationPending')}</Text>
@@ -155,12 +174,8 @@ function BookingDetails({ booking, onChange }: { booking: Booking; onChange: () 
       </AppCard>}
       <AppCard>
         <SectionHeader title={t('booking.details.timestamps')} />
-        <DetailRows rows={[{
-          label: t('booking.details.submittedAt'),
-          value: formatBookingDate(booking.createdAt, i18n.resolvedLanguage, true),
-        }, ...(booking.cancelledAt ? [{
-          label: t('integration.cancelledAt'), value: formatBookingDate(booking.cancelledAt, i18n.resolvedLanguage, true),
-        }] : [])]} />
+        <DetailRows rows={milestones.flatMap(({ label, date }) => date
+          ? [{ label, value: formatBookingDate(date, i18n.resolvedLanguage, true) }] : [])} />
         {booking.cancellationReason && <Text style={typography.supporting}>{booking.cancellationReason}</Text>}
       </AppCard>
       {cancellation.failed && <Text accessibilityLiveRegion="polite" style={styles.error}>

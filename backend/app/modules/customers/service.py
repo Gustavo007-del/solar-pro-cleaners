@@ -17,6 +17,7 @@ from app.modules.customers.schemas import (
     CustomerAuthentication, CustomerLogin, CustomerProfile, CustomerProfileUpdate,
     CustomerRegister, CustomerTokens, RefreshRequest,
 )
+from app.modules.notifications.models import CustomerDevice
 
 INSTALLATION_HASH_CONSTRAINT = "uq_customer_installations_credential_hash"
 
@@ -226,6 +227,10 @@ def logout_customer(db: Session, context: CustomerContext, *, all_devices: bool 
             _revoke_sessions(db, context.customer_id, now)
         else:
             session.revoked_at = now
+        devices = update(CustomerDevice).where(CustomerDevice.customer_id == context.customer_id)
+        if not all_devices:
+            devices = devices.where(CustomerDevice.installation_id == session.installation_id)
+        db.execute(devices.values(is_active=False, revision=CustomerDevice.revision + 1))
 
 
 def update_customer(db: Session, context: CustomerContext, data: CustomerProfileUpdate) -> CustomerProfile:
@@ -248,6 +253,9 @@ def set_locked_customer_active(db: Session, customer: Customer, active: bool) ->
     customer.is_active = active
     if not active:
         _revoke_sessions(db, customer.id, utc_now())
+        db.execute(update(CustomerDevice).where(CustomerDevice.customer_id == customer.id).values(
+            is_active=False, revision=CustomerDevice.revision + 1,
+        ))
 
 
 def deactivate_customer(db: Session, customer_id: UUID) -> None:

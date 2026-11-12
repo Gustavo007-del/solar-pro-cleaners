@@ -43,7 +43,7 @@ export function FeatureCard(props: ContentCardProps) {
 const styles = StyleSheet.create({
   content: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   stack: { flexDirection: 'column', alignItems: 'stretch' },
-  copy: { flex: 1 },
+  copy: { flex: 1, minWidth: 0 },
   icon: {
     width: sizes.touchTarget,
     height: sizes.touchTarget,

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { IconButton } from '@/components/buttons/Buttons';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { colors, sizes, spacing, typography } from '@/theme';
 
 export type SectionHeaderProps = { title: string; subtitle?: string; action?: ReactNode };
@@ -24,8 +25,9 @@ export type AppHeaderProps = { title: string; onBack?: () => void; action?: Reac
 
 export function AppHeader({ title, onBack, action }: AppHeaderProps) {
   const { t } = useTranslation();
+  const { screenMargin } = useScreenLayout();
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingHorizontal: screenMargin }]}>
       {onBack && <IconButton icon={ArrowLeft} accessibilityLabel={t('common.back')} onPress={onBack} />}
       <Text accessibilityRole="header" style={[typography.heading, styles.title, styles.headerTitle]}>{title}</Text>
       {action}
@@ -35,18 +37,17 @@ export function AppHeader({ title, onBack, action }: AppHeaderProps) {
 
 const styles = StyleSheet.create({
   section: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  copy: { flex: 1, gap: spacing.xxs },
+  copy: { flex: 1, minWidth: 0, gap: spacing.xxs },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: sizes.header,
     gap: spacing.sm,
-    paddingHorizontal: sizes.screenMargin,
     paddingVertical: spacing.xs,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  headerTitle: { flex: 1 },
+  headerTitle: { flex: 1, minWidth: 0 },
   title: { color: colors.ink },
   subtitle: { color: colors.muted },
 });

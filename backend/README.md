@@ -47,3 +47,5 @@ The [technician and assignment contract](./docs/technicians.md) covers technicia
 The [locations API and Expo integration contract](./docs/locations.md) covers customer-owned saved addresses, default selection, coverage checks, and booking address snapshots.
 
 The Expo app uses SecureStore for customer credentials and calls the backend for profiles, catalogue, saved addresses and bookings. Customer booking and address queries use the authenticated customer ID. Administrative authentication has a separate trust boundary.
+For device registration, Expo credentials, and deploying the separate PostgreSQL scheduler, see the
+[push notification runbook](docs/notifications.md).

@@ -36,6 +36,9 @@ class Permission(StrEnum):
     LOCATIONS_READ = "locations.read"
     LOCATIONS_MANAGE = "locations.manage"
     BUSINESS_MANAGE = "business.manage"
+    NOTIFICATIONS_READ = "notifications.read"
+    NOTIFICATIONS_MANAGE = "notifications.manage"
+    NOTIFICATIONS_BROADCAST = "notifications.broadcast"
     TECHNICIANS_READ = "technicians.read"
     TECHNICIANS_CREATE = "technicians.create"
     TECHNICIANS_UPDATE = "technicians.update"
@@ -57,6 +60,7 @@ ROLE_PERMISSIONS = {
         Permission.DASHBOARD_READ, Permission.DASHBOARD_ANALYTICS_READ,
         Permission.SERVICES_READ, Permission.SERVICES_MANAGE, Permission.LOCATIONS_READ,
         Permission.LOCATIONS_MANAGE,
+        Permission.NOTIFICATIONS_READ, Permission.NOTIFICATIONS_MANAGE,
         Permission.TECHNICIANS_READ, Permission.TECHNICIANS_CREATE, Permission.TECHNICIANS_UPDATE,
         Permission.TECHNICIAN_AVAILABILITY_READ, Permission.TECHNICIAN_AVAILABILITY_MANAGE,
         Permission.TECHNICIAN_LEAVE_MANAGE, Permission.TECHNICIAN_ASSIGNMENTS_READ,

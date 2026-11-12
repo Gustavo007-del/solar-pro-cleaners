@@ -6,11 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { TextButton } from '@/components/buttons/Buttons';
 import { usePagedResource } from '@/hooks/usePagedResource';
 import { useApiMessage } from '@/hooks/useApiMessage';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { ScreenContainer } from '@/components/layout/Containers';
 import { appRoutes } from '@/constants/routes';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { bookingService } from '@/services/bookings/bookingService';
-import { colors, sizes, spacing, typography } from '@/theme';
+import { colors, spacing, typography } from '@/theme';
 import type { BookingCardData, BookingFilter } from '@/types/booking';
 
 import { BookingCard } from '../components/BookingCard';
@@ -27,6 +28,7 @@ export function MyBookingsScreen() {
 
 function BookingHistory({ customerId }: { customerId?: string }) {
   const { t } = useTranslation();
+  const { screenMargin } = useScreenLayout();
   const [filter, setFilter] = useState<BookingFilter>('all');
   const read = useCallback((page: number) => bookingService.list(filter, page), [filter]);
   const { data, error, loading, more, refresh, loadMore } = usePagedResource<BookingCardData, BookingPage>(read);
@@ -40,7 +42,7 @@ function BookingHistory({ customerId }: { customerId?: string }) {
       <FlatList
         data={data?.items ?? []}
         keyExtractor={(booking) => booking.id}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingHorizontal: screenMargin }]}
         ItemSeparatorComponent={BookingGap}
         onRefresh={data ? refresh : undefined}
         refreshing={Boolean(data) && loading}
@@ -91,7 +93,7 @@ function BookingGap() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: sizes.screenMargin, paddingTop: spacing.md, paddingBottom: spacing.xxl },
+  content: { paddingTop: spacing.md, paddingBottom: spacing.xxl },
   header: { gap: spacing.md, paddingBottom: spacing.md },
   intro: { gap: spacing.xxs },
   title: { color: colors.ink },

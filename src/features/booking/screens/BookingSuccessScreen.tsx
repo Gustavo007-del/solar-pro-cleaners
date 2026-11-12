@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: { color: colors.ink, textAlign: 'center' },
-  description: { color: colors.muted, textAlign: 'center' },
+  title: { color: colors.ink, alignSelf: 'stretch', textAlign: 'center' },
+  description: { color: colors.muted, alignSelf: 'stretch', textAlign: 'center' },
   reference: { color: colors.deep },
   actions: { gap: spacing.sm },
 });

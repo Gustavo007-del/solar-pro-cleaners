@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigation } from 'expo-router';
 import { useForm } from 'react-hook-form';
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text } from 'react-native';
+import { Keyboard, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { PrimaryButton } from '@/components/buttons/Buttons';
-import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { FormScrollContainer, ScreenContainer } from '@/components/layout/Containers';
 import { AppHeader } from '@/components/layout/Headers';
 import { Entrance } from '@/components/motion/Entrance';
 import { AppCard } from '@/components/surfaces/AppCard';
@@ -29,13 +29,11 @@ export function EditProfileScreen() {
   return (
     <ScreenContainer>
       <AppHeader title={t('booking.customer.edit')} onBack={goBack} />
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
-          {profile
-            ? <EditProfileForm key={profile.customerId} profile={profile} />
-            : <AppCard><Text style={[typography.body, styles.copy]}>{t('profile.missing')}</Text></AppCard>}
-        </ScrollContainer>
-      </KeyboardAvoidingView>
+      <FormScrollContainer contentContainerStyle={styles.content}>
+        {profile
+          ? <EditProfileForm key={profile.customerId} profile={profile} />
+          : <AppCard><Text style={[typography.body, styles.copy]}>{t('profile.missing')}</Text></AppCard>}
+      </FormScrollContainer>
     </ScreenContainer>
   );
 }
@@ -82,7 +80,6 @@ function EditProfileForm({ profile }: { profile: CustomerProfile }) {
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
   content: { gap: spacing.md },
   copy: { color: colors.muted },
   error: { color: colors.error },

@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   dangerIcon: { backgroundColor: colors.errorTint },
   dangerText: { color: colors.error },
-  copy: { flex: 1 },
+  copy: { flex: 1, minWidth: 0 },
   label: { color: colors.ink },
   description: { color: colors.muted },
 });

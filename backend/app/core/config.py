@@ -76,6 +76,17 @@ class Settings(BaseSettings):
     rate_limit_admin_password: int = Field(default=5, ge=1, le=10000)
 
     business_timezone: str = "Asia/Kolkata"
+    expo_push_access_token: SecretStr | None = None
+    notification_poll_seconds: float = Field(default=3, ge=1, le=300)
+    notification_batch_size: int = Field(default=100, ge=1, le=100)
+    notification_claim_limit: int = Field(default=10, ge=1, le=100)
+    notification_retry_limit: int = Field(default=4, ge=1, le=10)
+    notification_receipt_retry_limit: int = Field(default=6, ge=1, le=12)
+    notification_receipt_delay_seconds: int = Field(default=900, ge=1, le=3600)
+    notification_http_timeout_seconds: int = Field(default=10, ge=1, le=60)
+    notification_min_interval_minutes: int = Field(default=15, ge=1, le=1440)
+    rate_limit_notification_device: int = Field(default=120, ge=1, le=10000)
+    rate_limit_notification_action: int = Field(default=30, ge=1, le=1000)
     public_privacy_effective_date: date | None = None
     private_media_bucket: str | None = Field(default=None, pattern=r"^[a-z0-9][a-z0-9-]{0,62}$")
     private_media_max_bytes: int = Field(default=5 * 1024 * 1024, ge=1024, le=25 * 1024 * 1024)

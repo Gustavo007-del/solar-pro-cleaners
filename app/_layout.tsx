@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from '@/components/buttons/Buttons';
 import { ScreenContainer, ScrollContainer, Spacer } from '@/components/layout/Containers';
 import { SectionHeader } from '@/components/layout/Headers';
+import { PushNotifications } from '@/features/notifications/PushNotifications';
 import { AppProviders } from '@/providers/AppProviders';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, durations } from '@/theme';
@@ -43,7 +44,7 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <StartupSystemBars />
-      <RootNavigator />
+      <PushNotifications><RootNavigator /></PushNotifications>
     </AppProviders>
   );
 }

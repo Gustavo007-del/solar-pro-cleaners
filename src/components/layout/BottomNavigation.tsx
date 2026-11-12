@@ -6,6 +6,7 @@ import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } 
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 import { colors, durations, motion, radius, sizes, spacing, typography } from '@/theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
@@ -39,13 +40,15 @@ function TabIcon({ icon: Icon, selected }: { icon: LucideIcon; selected: boolean
 
 export function BottomNavigation({ state, descriptors, navigation, insets }: TabBarProps) {
   const { t } = useTranslation();
+  const { screenWidth, textScale } = useScreenLayout();
+  const useTwoRows = (screenWidth - 2 * spacing.xs) / textScale < 280;
 
   return (
     <View style={[
       styles.shell,
       { paddingBottom: insets.bottom + spacing.xs, paddingLeft: insets.left, paddingRight: insets.right },
     ]}>
-      <View accessibilityRole="tablist" style={styles.tabs}>
+      <View accessibilityRole="tablist" style={[styles.tabs, useTwoRows && styles.wrappedTabs]}>
         {state.routes.map((route, index) => {
           const tab = tabs[route.name];
           if (!tab) return null;
@@ -64,7 +67,7 @@ export function BottomNavigation({ state, descriptors, navigation, insets }: Tab
                 if (!selected && !event.defaultPrevented) navigation.navigate(route.name, route.params);
               }}
               onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
-              style={styles.tab}
+              style={[styles.tab, useTwoRows && styles.halfTab]}
             >
               <TabIcon icon={tab.icon} selected={selected} />
               <Text style={[
@@ -93,16 +96,20 @@ const styles = StyleSheet.create({
     maxWidth: sizes.screenMaxWidth,
     paddingHorizontal: spacing.xs,
   },
+  wrappedTabs: { flexWrap: 'wrap' },
   tab: {
     flex: 1,
+    minWidth: 0,
     minHeight: sizes.touchTarget,
     alignItems: 'center',
     gap: spacing.xxs,
     paddingHorizontal: spacing.xxs,
     paddingVertical: spacing.xxs,
   },
+  halfTab: { flexBasis: '50%', flexGrow: 0 },
   indicator: {
     width: sizes.tabIndicator.width,
+    maxWidth: '100%',
     height: sizes.tabIndicator.height,
     alignItems: 'center',
     justifyContent: 'center',

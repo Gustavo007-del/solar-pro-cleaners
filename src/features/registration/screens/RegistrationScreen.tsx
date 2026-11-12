@@ -2,11 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
 import { ArrowRight, ShieldCheck } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { PrimaryButton } from '@/components/buttons/Buttons';
-import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { FormScrollContainer, ScreenContainer } from '@/components/layout/Containers';
 import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Entrance } from '@/components/motion/Entrance';
 import { appRoutes } from '@/constants/routes';
@@ -44,51 +44,48 @@ export function RegistrationScreen() {
 
   return (
     <ScreenContainer>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
-          <Entrance style={styles.form}>
-            <View style={styles.intro}>
-              <Text accessibilityRole="header" style={[typography.display, styles.title]}>{t(knownInstallation ? 'integration.signIn' : 'registration.title')}</Text>
-              <Text style={[typography.body, styles.supporting]}>{t(knownInstallation ? 'integration.signInHelp' : 'registration.description')}</Text>
-            </View>
-
-            {!knownInstallation && <RegistrationFields control={control} disabled={pending} />}
-
-            <View style={styles.privacy}>
-              <ShieldCheck size={sizes.icon.md} color={colors.deep} />
-              <Text style={[typography.supporting, styles.supporting, styles.privacyText]}>{t('registration.privacy')}</Text>
-            </View>
-          </Entrance>
-
-          <View style={styles.footer}>
-            {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{message(error, t('error.save'))}</Text>}
-            <PrimaryButton
-              label={t(knownInstallation ? 'integration.signIn' : 'common.saveAndContinue')}
-              loadingLabel={t('common.saving')}
-              icon={ArrowRight}
-              iconPosition="end"
-              fullWidth
-              loading={pending}
-              onPress={() => { if (knownInstallation) void save(signIn); else void submit(); }}
-            />
-            <View style={styles.links}>
-              {legalLinks.map(({ href, label }) => (
-                <Link key={href} href={href} asChild>
-                  <AnimatedPressable accessibilityRole="link" disabled={pending} style={styles.link}>
-                    <Text style={[typography.label, styles.linkText]}>{t(label)}</Text>
-                  </AnimatedPressable>
-                </Link>
-              ))}
-            </View>
+      <FormScrollContainer contentContainerStyle={styles.content}>
+        <Entrance style={styles.form}>
+          <View style={styles.intro}>
+            <Text accessibilityRole="header" style={[typography.display, styles.title]}>{t(knownInstallation ? 'integration.signIn' : 'registration.title')}</Text>
+            <Text style={[typography.body, styles.supporting]}>{t(knownInstallation ? 'integration.signInHelp' : 'registration.description')}</Text>
           </View>
-        </ScrollContainer>
-      </KeyboardAvoidingView>
+
+          {!knownInstallation && <RegistrationFields control={control} disabled={pending} />}
+
+          <View style={styles.privacy}>
+            <ShieldCheck size={sizes.icon.md} color={colors.deep} />
+            <Text style={[typography.supporting, styles.supporting, styles.privacyText]}>{t('registration.privacy')}</Text>
+          </View>
+        </Entrance>
+
+        <View style={styles.footer}>
+          {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{message(error, t('error.save'))}</Text>}
+          <PrimaryButton
+            label={t(knownInstallation ? 'integration.signIn' : 'common.saveAndContinue')}
+            loadingLabel={t('common.saving')}
+            icon={ArrowRight}
+            iconPosition="end"
+            fullWidth
+            loading={pending}
+            onPress={() => { if (knownInstallation) void save(signIn); else void submit(); }}
+          />
+          <View style={styles.links}>
+            {legalLinks.map(({ href, label }) => (
+              <Link key={href} href={href} asChild>
+                <AnimatedPressable accessibilityRole="link" disabled={pending} style={styles.link}>
+                  <Text style={[typography.label, styles.linkText]}>{t(label)}</Text>
+                </AnimatedPressable>
+              </Link>
+            ))}
+          </View>
+        </View>
+      </FormScrollContainer>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
   content: { flexGrow: 1, gap: spacing.xl },
   form: { gap: spacing.xl },
   intro: { gap: spacing.xs },
@@ -102,7 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     padding: spacing.md,
   },
-  privacyText: { flex: 1, color: colors.deep },
+  privacyText: { flex: 1, minWidth: 0, color: colors.deep },
   footer: { marginTop: 'auto', gap: spacing.xs },
   error: { color: colors.error },
   links: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: spacing.md },

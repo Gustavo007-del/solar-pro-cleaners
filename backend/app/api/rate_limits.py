@@ -12,6 +12,7 @@ from app.schemas.common import ErrorResponse
 Category = Literal[
     "customer_register", "customer_login", "customer_refresh", "admin_refresh", "booking_create",
     "booking_cancel", "admin_booking_cancel", "customer_update", "admin_customer_update", "admin_create", "admin_password",
+    "notification_device", "notification_action",
 ]
 RATE_LIMITED = {429: {
     "model": ErrorResponse,

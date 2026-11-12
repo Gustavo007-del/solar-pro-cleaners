@@ -14,7 +14,8 @@ from app.modules.bookings.metrics import status_counts
 from app.modules.bookings.models import Booking, BookingAddress, BookingPricingSnapshot, BookingStatusHistory
 from app.modules.bookings.repository import lock_booking, owned_details, page_bookings
 from app.modules.bookings.schemas import (
-    BookingAddressInput, BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery, CustomerBookingPage,
+    BookingAddressInput, BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery,
+    BookingTechnicianContact, CustomerBookingPage,
 )
 from app.modules.bookings.serialization import booking_details
 from app.modules.bookings.status import BookingStatus, CUSTOMER_CANCELLABLE_STATUSES
@@ -27,6 +28,8 @@ from app.modules.locations.service import check_coverage
 from app.modules.locations.utils import google_maps_url
 from app.modules.pricing.service import find_applicable_price
 from app.modules.services.service import require_active_service
+from app.modules.technicians.models import BookingAssignment, Technician
+from app.modules.technicians.status import ACTIVE_ASSIGNMENTS
 
 REFERENCE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
@@ -147,7 +150,21 @@ def list_customer_bookings(db: Session, context: CustomerContext, query: Booking
 
 
 def read_customer_booking(db: Session, context: CustomerContext, booking_id: UUID) -> BookingDetails:
-    return booking_details(owned_details(db, context.customer_id, booking_id))
+    booking = owned_details(db, context.customer_id, booking_id)
+    technician = None
+    if booking.status in (BookingStatus.ASSIGNED, BookingStatus.IN_PROGRESS):
+        contact = db.execute(
+            select(Technician.full_name, Technician.primary_phone)
+            .join(BookingAssignment, BookingAssignment.technician_id == Technician.id)
+            .where(
+                BookingAssignment.booking_id == booking.id,
+                BookingAssignment.assignment_status.in_(ACTIVE_ASSIGNMENTS),
+                Technician.is_active.is_(True),
+            )
+        ).one_or_none()
+        if contact is not None:
+            technician = BookingTechnicianContact(full_name=contact.full_name, phone_number=contact.primary_phone)
+    return booking_details(booking, technician=technician)
 
 
 def cancel_customer_booking(

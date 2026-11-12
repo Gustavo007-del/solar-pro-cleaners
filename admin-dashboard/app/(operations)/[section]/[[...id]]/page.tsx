@@ -11,6 +11,7 @@ import { Technicians, TechnicianRecord } from '@/components/technicians/technici
 import { AvailabilityPage, BusinessSettings, ServiceAreas, ServiceRecord, Services } from '@/components/business/business';
 import { BookingReports, CustomerReports, TechnicianReports } from '@/components/dashboard/reports';
 import { AccountSettings, AdminRecord, AdminUsers } from '@/components/admin/accounts';
+import { NotificationCampaigns, NotificationRecord, NewNotification } from '@/components/notifications/campaigns';
 
 type Props = { params: Promise<{ section: string; id?: string[] }> };
 export async function generateMetadata({ params }: Props) {
@@ -19,7 +20,8 @@ export async function generateMetadata({ params }: Props) {
 }
 export default async function Section({ params }: Props) {
   const { section, id = [] } = await params;
-  if (id.length > 1 || (id[0] && !z.uuid().safeParse(id[0]).success)) notFound();
+  const newNotification = section === 'notifications' && id[0] === 'new';
+  if (id.length > 1 || (id[0] && !newNotification && !z.uuid().safeParse(id[0]).success)) notFound();
   const key = id[0];
   let content: ReactNode;
   if (section === 'bookings') content = key ? <BookingDetail id={key} /> : <BookingList />;
@@ -27,6 +29,8 @@ export default async function Section({ params }: Props) {
   else if (section === 'technicians') content = key ? <TechnicianRecord id={key} /> : <Technicians />;
   else if (section === 'services') content = key ? <ServiceRecord id={key} /> : <Services />;
   else if (section === 'admin-users') content = key ? <AdminRecord id={key} /> : <AdminUsers />;
+  else if (section === 'notifications') content = newNotification ? <NewNotification />
+    : key ? <NotificationRecord id={key} /> : <NotificationCampaigns />;
   else if (key) notFound();
   else {
     const pages: Record<string, ReactNode> = {

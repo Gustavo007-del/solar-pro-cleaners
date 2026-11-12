@@ -64,9 +64,14 @@ export type Booking = BookingCardData & {
   customerName: string;
   primaryPhone: string;
   alternatePhone: string | null;
+  technician: { fullName: string; phone: string } | null;
   additionalInstructions: string | null;
   cancellationReason: string | null;
   cancelledAt: string | null;
+  confirmedAt: string | null;
+  assignedAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
   updatedAt: string;
   coverageMatched: boolean | null;
   pricing: {

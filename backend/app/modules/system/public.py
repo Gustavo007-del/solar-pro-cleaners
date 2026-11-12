@@ -56,6 +56,10 @@ POLICY = (
      "Authorized staff access customer information for their assigned duties. "
      "Information needed to carry out a visit may be shared with the technician responsible for that work. "
      "Hosting and database providers process information to operate the service."),
+    ("Push notifications",
+     "If you turn on push notifications, we use a device token and delivery records to send announcements and service "
+     "updates through Expo and your phone’s push service. You can turn notifications off in Solar Care or your phone settings. "
+     "A message may be visible on your lock screen depending on those settings."),
     ("Retention and account requests",
      "We retain account and service records as needed for operations, security and applicable obligations. "
      "Deactivating an account can end access while preserving booking history. Contact us to ask about access, correction, "

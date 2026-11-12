@@ -14,9 +14,12 @@ const card = z.object({
 });
 const details = card.extend({
   customer: z.object({ full_name: z.string(), phone_number: z.string(), alternate_phone_number: z.string().nullable() }),
+  technician: z.object({ full_name: z.string(), phone_number: z.string() }).nullish(),
   address: addressSnapshot.extend({ address_line: z.string().nullable() }).nullable(),
   customer_instructions: z.string().nullable(), cancellation_reason: z.string().nullable(),
   cancelled_at: timestamp.nullable(), updated_at: timestamp,
+  confirmed_at: timestamp.nullish(), assigned_at: timestamp.nullish(),
+  started_at: timestamp.nullish(), completed_at: timestamp.nullish(),
   pricing: z.object({
     pricing_type: pricingType.nullable(), base_price: money.nullable(), price_per_panel: money.nullable(),
     minimum_charge: money.nullable(), panel_quantity: z.number().int().positive().nullable(), currency: z.string(),
@@ -48,8 +51,11 @@ function toBooking(item: z.infer<typeof details>): Booking {
   return {
     ...toCard(item), location: item.address ? fromAddress(item.address) : null, customerName: item.customer.full_name,
     primaryPhone: item.customer.phone_number, alternatePhone: item.customer.alternate_phone_number,
+    technician: item.technician ? { fullName: item.technician.full_name, phone: item.technician.phone_number } : null,
     additionalInstructions: item.customer_instructions, cancellationReason: item.cancellation_reason,
     cancelledAt: item.cancelled_at, updatedAt: item.updated_at,
+    confirmedAt: item.confirmed_at ?? null, assignedAt: item.assigned_at ?? null,
+    startedAt: item.started_at ?? null, completedAt: item.completed_at ?? null,
     pricing: item.pricing, coverageMatched: item.coverage_matched,
     history: item.history.map((event) => ({ status: normalizeBookingStatus(event.new_status), createdAt: event.created_at })),
   };

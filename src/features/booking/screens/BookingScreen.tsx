@@ -1,13 +1,13 @@
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import { LocateFixed } from 'lucide-react-native';
+import { CalendarDays, LocateFixed, MapPin, Phone, Sun } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 import { OutlineButton, PrimaryButton, TextButton } from '@/components/buttons/Buttons';
 import { AppTextArea, AppTextInput } from '@/components/forms/TextFields';
-import { Divider, ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { Divider, FormScrollContainer, ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
 import { AppHeader } from '@/components/layout/Headers';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { appRoutes } from '@/constants/routes';
@@ -20,8 +20,7 @@ import { catalogue, type Service } from '@/services/api/catalogue';
 import { ApiError } from '@/services/api/client';
 import { bookingService, rememberBookingReceipt, type CreateBookingInput } from '@/services/bookings/bookingService';
 import { prepareSubmission, resolveSubmission } from '@/services/bookings/submissionJournal';
-import { colors, spacing, typography } from '@/theme';
-import { maxBookingInstructions } from '@/types/booking';
+import { colors, radius, sizes, spacing, typography } from '@/theme';
 import type { CustomerProfile } from '@/types/customerProfile';
 
 import { BookingDateField } from '../components/BookingDateField';
@@ -72,7 +71,6 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
   const service = useBookingResource(serviceId, readService);
   const [showServices, setShowServices] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
-  const [showNotes, setShowNotes] = useState(Boolean(draft.instructions));
   const [settingsError, setSettingsError] = useState(false);
   const frozen = pending || Boolean(draft.submission);
   const dateText = draft.serviceDate ?? '';
@@ -124,7 +122,7 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
         const request: CreateBookingInput = {
           service_id: serviceId, service_date: serviceDate,
           pricing: { panel_quantity: needsQuantity ? Number(quantity) : undefined },
-          customer_instructions: current.instructions.trim() || null,
+          customer_instructions: null,
           ...bookingAddressFields(current),
         };
         submission = { id: await prepareSubmission(profile.customerId, request), request };
@@ -155,112 +153,138 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
   return (
     <ScreenContainer>
       <AppHeader title={t('booking.title')} onBack={pending ? undefined : leaveBooking} />
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollContainer keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
-          <AppCard style={styles.card}>
-            {service.data && !service.failed ? <>
-              <Text accessibilityRole="header" style={typography.section}>{service.data.name}</Text>
-              <ServicePricing pricing={service.data.pricing} />
-              {needsQuantity && <AppTextInput label={t('integration.panelQuantity')} value={quantity}
-                editable={!frozen} keyboardType="number-pad" maxLength={5}
-                error={quantity && !quantityValid ? t('booking.form.quantityError') : undefined}
-                onChangeText={(panelQuantity) => updateDraft({ panelQuantity })} />}
-              {chooseAnother && !showServices && <TextButton label={t('booking.form.changeService')}
-                disabled={frozen} onPress={() => setShowServices(true)} />}
-            </> : (service.loading || services.loading) && <Text style={typography.supporting}>{t('common.loading')}</Text>}
-            {service.failed && <View style={styles.group}>
-              <Text accessibilityLiveRegion="polite" style={styles.error}>{message(service.error, t('booking.form.serviceLoadError'))}</Text>
-              <TextButton label={t('common.retry')} disabled={frozen} onPress={service.refresh} />
-            </View>}
-            {showServiceChoices && !frozen && <>
-              {services.data && services.data.first.total > 1 &&
-                <Text accessibilityRole="header" style={typography.label}>{t('booking.form.chooseService')}</Text>}
-              {!serviceId && services.data?.first.total === 0 && <>
-                <Text style={typography.body}>{t('integration.noServices')}</Text>
-                <TextButton label={t('common.retry')} onPress={() => { void services.refresh(); }} />
-              </>}
-              {services.error != null && <>
-                <Text style={styles.error}>{message(services.error, t('booking.form.serviceLoadError'))}</Text>
-                <TextButton label={t('common.retry')} onPress={() => { void (services.data ? services.loadMore() : services.refresh()); }} />
-              </>}
-              {services.data?.items.filter((item) => item.id !== serviceId).map((item) => (
-                <OutlineButton key={item.id} label={item.name} onPress={() => {
-                  updateDraft({ serviceId: item.id, panelQuantity: '' });
-                  setShowServices(false);
-                }} />
-              ))}
-              {services.data?.hasNext && <TextButton label={t('integration.loadMore')} disabled={services.more}
-                onPress={() => { void services.loadMore(); }} />}
-            </>}
-          </AppCard>
-
-          <AppCard style={styles.card}>
-            <Text style={typography.supporting}>{t('booking.form.followUpHint')}</Text>
-            <BookingDateField value={dateText} disabled={frozen}
-              onChange={(serviceDate) => updateDraft({ serviceDate })} />
-            <Divider />
-            <AppTextArea label={t('booking.form.optionalAddress')} placeholder={t('booking.form.addressPlaceholder')}
-              value={draft.addressText} maxLength={800} editable={!frozen} style={styles.address}
-              onChangeText={(addressText) => {
-                location.cancelCapture();
-                setSettingsError(false);
-                updateDraft({ addressText, savedAddress: undefined });
-              }} />
-            <OutlineButton icon={LocateFixed} label={t('booking.form.useLocation')} disabled={frozen}
-              loading={location.loading} loadingLabel={t('booking.location.getting')} onPress={captureLocation} />
-            {hasGps && <Text accessibilityLiveRegion="polite" style={typography.supporting}>{t('booking.form.gpsAdded')}</Text>}
-            {location.failure && <Text accessibilityLiveRegion="polite" style={typography.supporting}>
-              {t(`booking.location.failure.${location.failure}`)}
-            </Text>}
-            {showSettings && <OutlineButton label={t('booking.location.settings')} disabled={frozen}
-              onPress={() => { void openSettings(); }} />}
-            {settingsError && <Text accessibilityLiveRegion="polite" style={styles.error}>{t('booking.location.settingsError')}</Text>}
-            <View style={styles.actions}>
-              <TextButton label={t(showSaved ? 'booking.form.hideSaved' : 'integration.savedAddresses')}
-                disabled={frozen} onPress={() => setShowSaved(!showSaved)} />
-              {(hasGps || draft.addressText.trim() !== '') && <TextButton label={t('booking.form.clearLocation')}
-                disabled={frozen} onPress={() => {
-                  location.cancelCapture();
-                  setSettingsError(false);
-                  updateDraft({ captured: null, addressText: '', savedAddress: undefined });
-                }} />}
+      <FormScrollContainer contentContainerStyle={styles.content}>
+        <AppCard>
+          <View style={styles.sectionHeading}>
+            <View style={styles.sectionIcon}>
+              <Sun size={sizes.icon.md} color={colors.deep} />
             </View>
-            {showSaved && !frozen && <SavedAddressPicker selected={draft.savedAddress?.id} disabled={frozen} onSelect={(address) => {
-              if (currentDraft.current.submission) return;
+            <Text accessibilityRole="header" style={styles.sectionTitle}>{t('booking.summary.service')}</Text>
+          </View>
+          {service.data && !service.failed ? <>
+            <View style={styles.serviceSummary}>
+              <Text style={styles.serviceName}>{service.data.name}</Text>
+              <ServicePricing pricing={service.data.pricing} />
+            </View>
+            {needsQuantity && <AppTextInput label={t('integration.panelQuantity')} value={quantity}
+              editable={!frozen} keyboardType="number-pad" maxLength={5}
+              error={quantity && !quantityValid ? t('booking.form.quantityError') : undefined}
+              onChangeText={(panelQuantity) => updateDraft({ panelQuantity })} />}
+            {chooseAnother && !showServices && <TextButton label={t('booking.form.changeService')}
+              disabled={frozen} onPress={() => setShowServices(true)} />}
+          </> : (service.loading || services.loading) && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+          {service.failed && <View style={styles.group}>
+            <Text accessibilityLiveRegion="polite" style={styles.error}>{message(service.error, t('booking.form.serviceLoadError'))}</Text>
+            <TextButton label={t('common.retry')} disabled={frozen} onPress={service.refresh} />
+          </View>}
+          {showServiceChoices && !frozen && <>
+            {services.data && services.data.first.total > 1 &&
+              <Text accessibilityRole="header" style={typography.label}>{t('booking.form.chooseService')}</Text>}
+            {!serviceId && services.data?.first.total === 0 && <>
+              <Text style={typography.body}>{t('integration.noServices')}</Text>
+              <TextButton label={t('common.retry')} onPress={() => { void services.refresh(); }} />
+            </>}
+            {services.error != null && <>
+              <Text style={styles.error}>{message(services.error, t('booking.form.serviceLoadError'))}</Text>
+              <TextButton label={t('common.retry')} onPress={() => { void (services.data ? services.loadMore() : services.refresh()); }} />
+            </>}
+            {services.data?.items.filter((item) => item.id !== serviceId).map((item) => (
+              <OutlineButton key={item.id} label={item.name} onPress={() => {
+                updateDraft({ serviceId: item.id, panelQuantity: '' });
+                setShowServices(false);
+              }} />
+            ))}
+            {services.data?.hasNext && <TextButton label={t('integration.loadMore')} disabled={services.more}
+              onPress={() => { void services.loadMore(); }} />}
+          </>}
+        </AppCard>
+
+        <AppCard style={styles.visitCard}>
+          <View style={styles.sectionHeading}>
+            <View style={styles.sectionIcon}>
+              <CalendarDays size={sizes.icon.md} color={colors.deep} />
+            </View>
+            <Text accessibilityRole="header" style={styles.sectionTitle}>{t('booking.form.visitDetails')}</Text>
+          </View>
+          <Text style={styles.hint}>{t('booking.form.followUpHint')}</Text>
+          <BookingDateField value={dateText} disabled={frozen}
+            onChange={(serviceDate) => updateDraft({ serviceDate })} />
+          <Divider />
+          <AppTextArea label={t('booking.form.optionalAddress')} placeholder={t('booking.form.addressPlaceholder')}
+            value={draft.addressText} maxLength={800} editable={!frozen} style={styles.address} leadingIcon={MapPin}
+            onChangeText={(addressText) => {
               location.cancelCapture();
               setSettingsError(false);
-              updateDraft({ savedAddress: address, captured: null, addressText: address.address_line });
-              setShowSaved(false);
-            }} />}
-          </AppCard>
-
-          <AppCard style={styles.card}>
-            {showNotes ? <AppTextArea label={t('booking.instructions.label')} style={styles.address} value={draft.instructions}
-              editable={!frozen} maxLength={maxBookingInstructions} onChangeText={(instructions) => updateDraft({ instructions })} />
-              : <TextButton label={t('booking.form.addNotes')} disabled={frozen} onPress={() => setShowNotes(true)} />}
-            <Text style={typography.supporting}>{t('booking.form.contactNumber', { phone: profile.primaryPhone })}</Text>
-          </AppCard>
-
-          <View style={styles.group}>
-            {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>
-              {message(error, t('booking.submitError'))}
-            </Text>}
-            {draft.submission && !pending && <Text style={typography.supporting}>{t('integration.retrySameBooking')}</Text>}
-            <PrimaryButton label={t(draft.submission ? 'common.retry' : 'booking.submit')} loadingLabel={t('booking.submitting')}
-              disabled={!draft.submission && !canSubmit} loading={pending} fullWidth onPress={submitBooking} />
+              updateDraft({ addressText, savedAddress: undefined });
+            }} />
+          <OutlineButton compact icon={LocateFixed} label={t('booking.form.useLocation')} disabled={frozen}
+            loading={location.loading} loadingLabel={t('booking.location.getting')} onPress={captureLocation} />
+          {hasGps && <Text accessibilityLiveRegion="polite" style={styles.locationAdded}>{t('booking.form.gpsAdded')}</Text>}
+          {location.failure && <Text accessibilityLiveRegion="polite" style={typography.supporting}>
+            {t(`booking.location.failure.${location.failure}`)}
+          </Text>}
+          {showSettings && <OutlineButton label={t('booking.location.settings')} disabled={frozen}
+            onPress={() => { void openSettings(); }} />}
+          {settingsError && <Text accessibilityLiveRegion="polite" style={styles.error}>{t('booking.location.settingsError')}</Text>}
+          <View style={styles.actions}>
+            <TextButton label={t(showSaved ? 'booking.form.hideSaved' : 'integration.savedAddresses')}
+              disabled={frozen} onPress={() => setShowSaved(!showSaved)} />
+            {(hasGps || draft.addressText.trim() !== '') && <TextButton label={t('booking.form.clearLocation')}
+              disabled={frozen} onPress={() => {
+                location.cancelCapture();
+                setSettingsError(false);
+                updateDraft({ captured: null, addressText: '', savedAddress: undefined });
+              }} />}
           </View>
-        </ScrollContainer>
-      </KeyboardAvoidingView>
+          {showSaved && !frozen && <SavedAddressPicker selected={draft.savedAddress?.id} disabled={frozen} onSelect={(address) => {
+            if (currentDraft.current.submission) return;
+            location.cancelCapture();
+            setSettingsError(false);
+            updateDraft({ savedAddress: address, captured: null, addressText: address.address_line });
+            setShowSaved(false);
+          }} />}
+        </AppCard>
+
+        <View style={styles.submitSection}>
+          <View style={styles.contact}>
+            <Phone size={sizes.icon.sm} color={colors.deep} />
+            <Text style={styles.contactText}>{t('booking.form.contactNumber', { phone: profile.primaryPhone })}</Text>
+          </View>
+          {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>
+            {message(error, t('booking.submitError'))}
+          </Text>}
+          {draft.submission && !pending && <Text style={typography.supporting}>{t('integration.retrySameBooking')}</Text>}
+          <PrimaryButton label={t(draft.submission ? 'common.retry' : 'booking.submit')} loadingLabel={t('booking.submitting')}
+            disabled={!draft.submission && !canSubmit} loading={pending} fullWidth onPress={submitBooking} />
+        </View>
+      </FormScrollContainer>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  content: { gap: spacing.sm, paddingTop: spacing.sm },
-  card: { gap: spacing.xs },
+  content: { gap: spacing.md, paddingTop: spacing.sm },
+  sectionHeading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  sectionIcon: {
+    width: 36, height: 36, borderRadius: radius.md, alignItems: 'center',
+    justifyContent: 'center', backgroundColor: colors.mint,
+  },
+  sectionTitle: { ...typography.section, flex: 1, color: colors.ink },
+  serviceSummary: {
+    backgroundColor: colors.mint, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xxs,
+  },
+  serviceName: { ...typography.section, color: colors.deep },
+  visitCard: { gap: spacing.sm },
+  hint: { ...typography.supporting, color: colors.muted },
   group: { gap: spacing.xs },
   actions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xs },
-  address: { minHeight: 64 },
+  address: { minHeight: 88 },
+  locationAdded: { ...typography.supporting, color: colors.successText },
+  submitSection: { gap: spacing.sm },
+  contact: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm,
+    borderRadius: radius.lg, backgroundColor: colors.mint,
+  },
+  contactText: { ...typography.label, flex: 1, color: colors.deep },
   error: { color: colors.error },
 });

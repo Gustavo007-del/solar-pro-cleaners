@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
   multilineIcon: { alignSelf: 'flex-start', marginTop: spacing.md },
   input: {
     flex: 1,
+    minWidth: 0,
     minHeight: sizes.input,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,

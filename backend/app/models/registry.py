@@ -6,6 +6,7 @@ from app.modules.bookings.models import Booking, BookingAddress, BookingAdminNot
 from app.modules.business.models import BusinessClosure, BusinessOperatingHour, BusinessProfile
 from app.modules.customers.models import Customer, CustomerInstallation, RefreshSession
 from app.modules.locations.models import CustomerAddress, ServiceArea
+from app.modules.notifications.models import CustomerDevice, NotificationCampaign, NotificationDelivery, NotificationExecution
 from app.modules.pricing.models import ServicePrice
 from app.modules.services.models import Service
 from app.modules.technicians.models import BookingAssignment, Technician, TechnicianAvailability, TechnicianLeave
@@ -16,4 +17,5 @@ __all__ = [
     "BusinessClosure", "BusinessOperatingHour", "BusinessProfile",
     "Customer", "CustomerAddress", "CustomerInstallation", "RefreshSession", "Service", "ServiceArea", "ServicePrice",
     "BookingAssignment", "Technician", "TechnicianAvailability", "TechnicianLeave",
+    "CustomerDevice", "NotificationCampaign", "NotificationDelivery", "NotificationExecution",
 ]

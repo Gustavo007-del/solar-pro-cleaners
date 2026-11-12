@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { OutlineButton, PrimaryButton, TextButton } from '@/components/buttons/Buttons';
 import { WebLinkButton } from '@/components/buttons/WebLinkButton';
-import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { FormScrollContainer, ScreenContainer } from '@/components/layout/Containers';
 import { DetailRows } from '@/components/layout/DetailRows';
 import { SectionHeader } from '@/components/layout/Headers';
 import { Entrance } from '@/components/motion/Entrance';
@@ -31,7 +31,7 @@ export function ContactScreen() {
 
   return (
     <ScreenContainer edges={['top', 'left', 'right']}>
-      <ScrollContainer contentContainerStyle={styles.content}>
+      <FormScrollContainer contentContainerStyle={styles.content}>
         <Entrance style={styles.intro}>
           <Text accessibilityRole="header" style={[typography.heading, styles.title]}>{t('contact.title')}</Text>
           <Text style={[typography.supporting, styles.description]}>{t('contact.description')}</Text>
@@ -70,7 +70,7 @@ export function ContactScreen() {
           {businessContact.website && <WebLinkButton label={t('contact.business.website')} url={businessContact.website} />}
         </AppCard>
         <BusinessSchedule />
-      </ScrollContainer>
+      </FormScrollContainer>
     </ScreenContainer>
   );
 }

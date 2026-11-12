@@ -10,7 +10,9 @@ operations = APIRouter()
 
 
 @operations.get("/health", include_in_schema=False)
+@operations.head("/health", include_in_schema=False)
 @router.get("/health", summary="Application liveness")
+@router.head("/health", include_in_schema=False)
 def health(response: Response) -> HealthResponse:
     response.headers["Cache-Control"] = "no-store"
     return HealthResponse(status="ok")

@@ -1,7 +1,7 @@
 from app.modules.bookings.models import Booking
 from app.modules.bookings.schemas import (
     BookingAddressResponse, BookingCustomerSnapshot, BookingDetails, BookingHistoryItem,
-    BookingListItem, BookingPricingResponse,
+    BookingListItem, BookingPricingResponse, BookingTechnicianContact,
 )
 from app.modules.bookings.status import STATUS_LABELS
 
@@ -23,9 +23,10 @@ def booking_card(booking: Booking) -> BookingListItem:
     )
 
 
-def booking_details(booking: Booking) -> BookingDetails:
+def booking_details(booking: Booking, *, technician: BookingTechnicianContact | None = None) -> BookingDetails:
     return BookingDetails(
         **booking_card(booking).model_dump(),
+        technician=technician,
         customer=BookingCustomerSnapshot(
             full_name=booking.customer_name_snapshot, phone_number=booking.customer_phone_snapshot,
             alternate_phone_number=booking.alternate_phone_snapshot,

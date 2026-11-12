@@ -332,6 +332,7 @@
   },
   "booking": {
     "form": {
+      "visitDetails": "Visit details",
       "followUpHint": "You can leave both fields blank. We’ll confirm any missing details with you.",
       "optionalDate": "Preferred date (optional)",
       "dateFormat": "Use DD/MM/YYYY, or leave this blank.",
@@ -344,7 +345,6 @@
       "gpsAdded": "GPS location added.",
       "hideSaved": "Hide saved addresses",
       "clearLocation": "Clear location",
-      "addNotes": "Add a note (optional)",
       "contactNumber": "We’ll call you at {{phone}}.",
       "datePending": "Date to be confirmed",
       "locationPending": "Location to be confirmed",
@@ -499,7 +499,14 @@
       "back": "Back to Bookings",
       "service": "Service Details",
       "location": "Service Location",
-      "call": "Call Customer",
+      "call": "Call Technician",
+      "technician": "Technician",
+      "technicianPending": "Technician contact details will appear once your visit is assigned.",
+      "technicianUnavailable": "Technician contact details are unavailable for this visit.",
+      "confirmedAt": "Confirmed on",
+      "assignedAt": "Assigned on",
+      "startedAt": "Service started on",
+      "completedAt": "Completed on",
       "timestamps": "Booking Timestamps",
       "submittedAt": "Submitted on",
       "addressFields": {
@@ -561,6 +568,24 @@
       "settings": "Manage app preferences and account options.",
       "support": "Contact Support"
     }
+  },
+  "notifications": {
+    "title": "Push notifications",
+    "explanation": "Get service announcements and booking updates on this phone. You can turn these off at any time.",
+    "loading": "Checking notification settings…",
+    "permission": {
+      "granted": "Phone permission: Allowed",
+      "denied": "Phone permission: Blocked",
+      "undetermined": "Phone permission: Not requested"
+    },
+    "on": "Notifications are on for this phone.",
+    "off": "Notifications are off for this phone.",
+    "denied": "This phone is blocking notifications. Allow them in system settings to receive updates.",
+    "error": "We couldn’t update notifications. Please try again.",
+    "unavailable": "Push notifications require an installed Solar Care app build.",
+    "openSettings": "Open Phone Settings",
+    "enable": "Turn On Notifications",
+    "disable": "Turn Off Notifications"
   },
   "settings": {
     "preferences": "Preferences",

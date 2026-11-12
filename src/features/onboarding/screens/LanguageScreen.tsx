@@ -9,6 +9,7 @@ import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers
 import { Entrance } from '@/components/motion/Entrance';
 import { useAppLanguage } from '@/hooks/useAppLanguage';
 import { useSaveAction } from '@/hooks/useSaveAction';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
 import type { Locale } from '@/locales/i18n';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
 
@@ -19,13 +20,16 @@ const languages = [
 
 export function LanguageScreen() {
   const { t } = useTranslation();
+  const { height, textScale } = useScreenLayout();
   const { setLocale } = useAppLanguage();
   const [selected, setSelected] = useState<Locale>();
   const { pending, failed, save } = useSaveAction();
 
   return (
     <ScreenContainer>
-      <ScrollContainer contentContainerStyle={styles.content}>
+      <ScrollContainer contentContainerStyle={[styles.content, {
+        paddingTop: height / textScale < 640 ? spacing.lg : spacing.xxxl,
+      }]}>
         <Entrance style={styles.intro}>
           <View style={styles.mark}>
             <Languages size={sizes.icon.lg} color={colors.deep} />
@@ -66,7 +70,7 @@ export function LanguageScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, gap: spacing.xl, paddingTop: spacing.xxxl },
+  content: { flexGrow: 1, gap: spacing.xl },
   intro: { gap: spacing.xs },
   mark: {
     alignItems: 'center',

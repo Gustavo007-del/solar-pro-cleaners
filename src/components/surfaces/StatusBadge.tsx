@@ -31,5 +31,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', maxWidth: '100%',
     gap: spacing.xxs, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs,
   },
-  label: { flexShrink: 1 },
+  label: { flexShrink: 1, minWidth: 0 },
 });

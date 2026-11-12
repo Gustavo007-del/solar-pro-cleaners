@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   address: { color: colors.ink },
   actions: { gap: spacing.xs },
   disclosure: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchTarget },
-  disclosureText: { color: colors.deep, flexShrink: 1 },
+  disclosureText: { color: colors.deep, flexShrink: 1, minWidth: 0 },
   error: { color: colors.error },
 });

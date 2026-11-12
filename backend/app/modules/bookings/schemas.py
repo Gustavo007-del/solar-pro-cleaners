@@ -175,7 +175,13 @@ class BookingHistoryItem(PublicRecord):
     created_at: datetime
 
 
+class BookingTechnicianContact(PublicRecord):
+    full_name: str
+    phone_number: str
+
+
 class BookingDetails(BookingListItem):
+    technician: BookingTechnicianContact | None = None
     customer: BookingCustomerSnapshot
     address: BookingAddressResponse | None
     pricing: BookingPricingResponse

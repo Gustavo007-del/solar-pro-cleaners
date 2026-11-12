@@ -67,7 +67,7 @@ export function BookingProgressTimeline({ status, history }: { status: Booking['
 
 const styles = StyleSheet.create({
   notice: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, padding: spacing.sm, borderRadius: radius.md },
-  noticeCopy: { flex: 1 },
+  noticeCopy: { flex: 1, minWidth: 0 },
   timeline: { paddingTop: spacing.xs },
   step: { flexDirection: 'row', gap: spacing.sm },
   rail: { width: sizes.icon.lg, alignItems: 'center' },
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   done: { backgroundColor: colors.deep, borderColor: colors.deep },
   active: { backgroundColor: colors.progressTint, borderColor: colors.progressText },
-  stepLabel: { flex: 1, color: colors.muted },
+  stepLabel: { flex: 1, minWidth: 0, color: colors.muted },
   reachedLabel: { color: colors.ink },
   stepSpacing: { paddingBottom: spacing.md },
 });

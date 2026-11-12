@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 
 import { OutlineButton, TextButton } from '@/components/buttons/Buttons';
 import { AppTextInput } from '@/components/forms/TextFields';
+import { useScreenLayout } from '@/hooks/useScreenLayout';
+import { spacing } from '@/theme';
 
 import { parseBookingDate } from '../utils/bookingDate';
 
@@ -13,6 +15,8 @@ export function BookingDateField({ value, disabled, onChange }: {
   value: string; disabled: boolean; onChange: (value: string) => void;
 }) {
   const { t } = useTranslation();
+  const { contentWidth, textScale } = useScreenLayout();
+  const datePickerDisplay = (contentWidth - 2 * spacing.md) / textScale < 320 ? 'compact' : 'inline';
   const [showPicker, setShowPicker] = useState(false);
   const iso = parseBookingDate(value);
   const today = new Date();
@@ -39,7 +43,7 @@ export function BookingDateField({ value, disabled, onChange }: {
         } else setShowPicker(!showPicker);
       }} />}
     {Platform.OS === 'ios' && showPicker && !disabled && <DateTimePicker value={pickerDate}
-      minimumDate={today} mode="date" display="inline" onChange={(_, date) => { if (date) setDate(date); }} />}
+      minimumDate={today} mode="date" display={datePickerDisplay} onChange={(_, date) => { if (date) setDate(date); }} />}
     {value.trim() !== '' && <TextButton label={t('booking.form.clearDate')} disabled={disabled}
       onPress={() => { setShowPicker(false); onChange(''); }} />}
   </>;

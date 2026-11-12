@@ -1,4 +1,5 @@
 import type { ExpoConfig } from 'expo/config';
+import { existsSync } from 'node:fs';
 
 import branding from './src/constants/metadata.json';
 import nativeEnglish from './src/locales/native/en.json';
@@ -16,6 +17,8 @@ const baseId = process.env.ANDROID_APPLICATION_ID?.trim() || branding.applicatio
 const variantSuffix = appEnvironment === 'production' ? '' : `.${appEnvironment}`;
 const schemeSuffix = appEnvironment === 'production' ? '' : `-${appEnvironment}`;
 const projectId = process.env.EAS_PROJECT_ID?.trim() || '65562a15-9615-4e78-8c42-02d4cd3d652e';
+const googleServicesFile = process.env.GOOGLE_SERVICES_JSON?.trim()
+  || (existsSync('./google-services.json') ? './google-services.json' : undefined);
 const sdkOverride = process.env.ANDROID_TARGET_SDK?.trim();
 const targetSdkVersion = sdkOverride ? Number(sdkOverride) : undefined;
 if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdkOverride) || Number(sdkOverride) <= 0)) {
@@ -24,6 +27,7 @@ if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdk
 
 const plugins: NonNullable<ExpoConfig['plugins']> = [
   'expo-router',
+  ['expo-notifications', { defaultChannel: 'general', icon: branding.assets.adaptiveMonochrome, color: palette.deep }],
   '@react-native-community/datetimepicker',
   ['expo-secure-store', { faceIDPermission: false }],
   ['expo-splash-screen', { image: branding.assets.splash, imageWidth: 160, resizeMode: 'contain', backgroundColor: palette.deep }],
@@ -58,8 +62,6 @@ const blockedPermissions = [
   'android.permission.READ_MEDIA_AUDIO',
   'android.permission.READ_MEDIA_VISUAL_USER_SELECTED',
   'android.permission.CALL_PHONE',
-  'android.permission.POST_NOTIFICATIONS',
-  'android.permission.VIBRATE',
   'com.google.android.gms.permission.AD_ID',
 ];
 if (appEnvironment !== 'development') blockedPermissions.push('android.permission.SYSTEM_ALERT_WINDOW');
@@ -81,6 +83,8 @@ export default {
     versionCode: branding.androidVersionCode,
     softwareKeyboardLayoutMode: 'resize',
     allowBackup: false,
+    permissions: ['android.permission.POST_NOTIFICATIONS'],
+    googleServicesFile,
     adaptiveIcon: {
       foregroundImage: branding.assets.adaptiveForeground,
       backgroundImage: branding.assets.adaptiveBackground,

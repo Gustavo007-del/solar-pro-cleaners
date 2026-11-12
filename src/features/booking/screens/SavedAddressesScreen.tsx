@@ -4,7 +4,7 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { OutlineButton, PrimaryButton, TextButton } from '@/components/buttons/Buttons';
-import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { FormScrollContainer, ScreenContainer } from '@/components/layout/Containers';
 import { AppHeader, SectionHeader } from '@/components/layout/Headers';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { appRoutes } from '@/constants/routes';
@@ -43,7 +43,7 @@ export function SavedAddressesScreen() {
   return (
     <ScreenContainer>
       <AppHeader title={t('integration.savedAddresses')} onBack={() => backOrReplace(appRoutes.settings)} />
-      <ScrollContainer contentContainerStyle={styles.content}>
+      <FormScrollContainer contentContainerStyle={styles.content}>
         {editor && <AddressEditor key={editor === 'new' ? 'new' : editor.id} existing={editor === 'new' ? undefined : editor}
           onClose={() => setEditor(null)} onSaved={() => { setEditor(null); void refresh(); }} />}
         {!editor && <PrimaryButton label={t('integration.addAddress')} onPress={() => setEditor('new')} />}
@@ -67,7 +67,7 @@ export function SavedAddressesScreen() {
           </AppCard>
         ))}
         {data?.hasNext && <TextButton label={t('integration.loadMore')} disabled={more} onPress={() => { void loadMore(); }} />}
-      </ScrollContainer>
+      </FormScrollContainer>
     </ScreenContainer>
   );
 }

@@ -209,7 +209,37 @@ test('customer mobile contracts against PostgreSQL', { skip: !fixture.base }, as
   assert.equal((await raw('/admin/bookings/' + next.id + '/status', {
     token: admin, method: 'PATCH', body: { status: 'confirmed' },
   })).status, 200);
-  assert.equal((await app.bookingService.getBookingById(next.id)).status, 'confirmed');
+  const confirmed = await app.bookingService.getBookingById(next.id);
+  assert.equal(confirmed.status, 'confirmed');
+  assert.ok(confirmed.confirmedAt);
+  assert.equal(confirmed.technician, null);
+  const techResponse = await raw('/admin/technicians', { token: admin, body: {
+    full_name: 'Assigned Technician', primary_phone: '+919110000201', email: 'private-tech@example.com',
+  } });
+  assert.equal(techResponse.status, 201);
+  const tech = await techResponse.json();
+  assert.equal((await raw('/admin/technicians/' + tech.id + '/availability', {
+    token: admin, method: 'PUT', body: {
+      availability_date: fixture.serviceDate, availability_status: 'available', start_time: '09:00', end_time: '17:00',
+    },
+  })).status, 200);
+  assert.equal((await raw('/admin/bookings/' + next.id + '/assign', {
+    token: admin, body: { technician_id: tech.id },
+  })).status, 201);
+  const assigned = await app.bookingService.getBookingById(next.id);
+  assert.equal(assigned.status, 'assigned');
+  assert.ok(assigned.assignedAt);
+  assert.deepEqual(assigned.technician, { fullName: 'Assigned Technician', phone: '+919110000201' });
+  const ownedResponse = await raw('/bookings/' + next.id, { token: sessionRecord(app).tokens.access_token });
+  assert.equal(ownedResponse.status, 200);
+  assert.deepEqual((await ownedResponse.json()).technician, {
+    full_name: 'Assigned Technician', phone_number: '+919110000201',
+  });
+  assert.equal(await other.bookingService.getBookingById(next.id), undefined);
+  assert.equal((await raw('/admin/bookings/' + next.id + '/unassign', {
+    token: admin, body: { reason: 'Technician changed' },
+  })).status, 200);
+  assert.equal((await app.bookingService.getBookingById(next.id)).technician, null);
   await assert.rejects(app.bookingService.cancel(next.id), is(409));
   const manualBooking = await app.bookingService.createBooking({
     service_id: fixture.fixed, service_date: fixture.serviceDate, address: app.addressPayload(manual),

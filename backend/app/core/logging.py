@@ -9,6 +9,9 @@ SAFE_EVENTS = {
     "startup", "shutdown", "request", "request_failed", "migration_failed", "database_issue",
     "authentication_failed", "authorization_failed", "rate_limited", "booking_create", "booking_cancel",
     "booking_admin_cancel", "booking_status", "booking_assign", "booking_reassign", "booking_unassign",
+    "notification_worker_started", "notification_worker_stopped", "notification_campaigns_claimed",
+    "notification_executions_finished", "notification_expo_send_failed", "notification_expo_receipt_failed",
+    "notification_database_issue", "notification_cycle_failed",
 }
 
 
@@ -37,6 +40,7 @@ class JsonFormatter(logging.Formatter):
                 "status_code",
                 "error_code",
                 "duration_ms",
+                "count",
             ):
                 value = getattr(record, key, None)
                 if value is not None:

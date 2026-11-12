@@ -56,9 +56,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.mint,
   },
   numberText: { color: colors.deep },
-  copy: { flex: 1, gap: spacing.xxs },
+  copy: { flex: 1, minWidth: 0, gap: spacing.xxs },
   stepSpacing: { paddingBottom: spacing.md },
   stepTitle: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  titleText: { color: colors.ink, flex: 1 },
+  titleText: { color: colors.ink, flex: 1, minWidth: 0 },
   description: { color: colors.muted },
 });

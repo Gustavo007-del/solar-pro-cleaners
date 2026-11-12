@@ -92,6 +92,21 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   await staffClient.send('/admin/users', { status: 403 });
 
   const customer = await seedCustomer('9000000201');
+  const campaigns = '/admin/notifications/campaigns';
+  await staffClient.send(campaigns, { status: 403 });
+  const draft = await send(campaigns, { method: 'POST', status: 201, body: {
+    request_id: randomUUID(), title: 'Dashboard fixture', message: 'Queued locally with no push provider.',
+    recipient_type: 'selected_customers', customer_ids: [customer.customer.id],
+  } });
+  const campaign = `${campaigns}/${draft.id}`;
+  assert.equal(draft.status, 'draft');
+  assert.equal((await send(campaigns + '?search=Dashboard')).total, 1);
+  await send(campaign + '/actions/send', { method: 'POST', origin: 'https://foreign.example', body: {}, status: 403 });
+  assert.equal((await send(campaign + '/actions/send', { method: 'POST', body: {} })).status, 'scheduled');
+  assert.equal((await send('/admin/notifications/stats')).scheduled, 1);
+  assert.equal((await send(campaign + '/executions')).total, 0);
+  assert.equal((await send(campaign + '/deliveries')).total, 0);
+  assert.equal((await send(campaign + '/actions/cancel', { method: 'POST', body: {} })).status, 'cancelled');
   const booking = await seedBooking(customer);
   const second = await seedBooking(customer);
   const bookingPath = '/admin/bookings/' + booking.id;

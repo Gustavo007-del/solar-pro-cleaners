@@ -1,5 +1,5 @@
 import {
-  Activity, Building2, CalendarCheck2, CalendarClock, CalendarDays, ChartNoAxesCombined, ClipboardList,
+  Activity, Bell, Building2, CalendarCheck2, CalendarClock, CalendarDays, ChartNoAxesCombined, ClipboardList,
   LayoutGrid, MapPinned, Settings2, ShieldCheck, Sun, Users, Wrench, type LucideIcon,
 } from 'lucide-react';
 
@@ -11,6 +11,7 @@ export const navigation: { title: string; entries: NavEntry[] }[] = [
     { id: 'customers', label: 'Customers', icon: Users, permissions: ['customers.read'] },
     { id: 'technicians', label: 'Technicians', icon: Wrench, permissions: ['technicians.read'] },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList, permissions: ['bookings.read', 'technicians.assignments.read'] },
+    { id: 'notifications', label: 'Notifications', icon: Bell, permissions: ['notifications.read'] },
   ] },
   { title: 'Business management', entries: [
     { id: 'services', label: 'Services', icon: Sun, permissions: ['services.read'] },
