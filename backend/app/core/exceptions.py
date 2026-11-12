@@ -106,14 +106,18 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(SQLAlchemyError)
     async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
-        logger.exception("Database error occurred")
+        logger.error(
+            "Database error occurred: %s",
+            str(exc),
+            exc_info=True,
+        )
 
         if isinstance(exc, IntegrityError):
             return error_response(
                 request.scope,
                 409,
                 "conflict",
-                "The request conflicts with existing data."
+                "The request conflicts with existing data.",
             )
 
         if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
@@ -121,12 +125,12 @@ def register_exception_handlers(app: FastAPI) -> None:
                 request.scope,
                 503,
                 "database_unavailable",
-                "The database is temporarily unavailable."
+                "The database is temporarily unavailable.",
             )
 
         return error_response(
             request.scope,
             500,
             "database_error",
-            "The database operation could not be completed."
+            "The database operation could not be completed.",
         )

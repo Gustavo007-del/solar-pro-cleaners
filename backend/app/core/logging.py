@@ -15,19 +15,34 @@ SAFE_EVENTS = {
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         event = getattr(record, "event", None)
+
         payload = {
-            "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(timespec="milliseconds"),
+            "timestamp": datetime.fromtimestamp(
+                record.created, UTC
+            ).isoformat(timespec="milliseconds"),
             "level": record.levelname,
             "logger": record.name,
             "event": event if record.name.startswith("app.") and event in SAFE_EVENTS else "runtime",
+            "message": record.getMessage(),
         }
+
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+
         if record.name.startswith("app."):
-            for key in ("request_id", "method", "route", "status_code", "error_code", "duration_ms"):
+            for key in (
+                "request_id",
+                "method",
+                "route",
+                "status_code",
+                "error_code",
+                "duration_ms",
+            ):
                 value = getattr(record, key, None)
                 if value is not None:
                     payload[key] = value
-        return json.dumps(payload, separators=(",", ":"))
 
+        return json.dumps(payload, separators=(",", ":"))
 
 def configure_logging(settings: Settings) -> None:
     dictConfig({
