@@ -21,6 +21,7 @@ import uvicorn
 from alembic import command
 from alembic.config import Config
 from psycopg import sql
+from sqlalchemy import select
 
 DASHBOARD = Path(__file__).resolve().parents[1]
 BACKEND = DASHBOARD.parent / "backend"
@@ -80,10 +81,9 @@ def run_servers(database_url: str, preview: bool) -> None:
                 provision_owner(session, settings)
                 with session.begin():
                     business = BusinessProfile(business_name="Solar Care", timezone="Asia/Kolkata")
-                    service = Service(name="Solar panel cleaning", slug="solar-panel-cleaning",
-                                      short_description="Professional rooftop panel care",
-                                      description="On-site cleaning for residential solar installations.")
-                    session.add_all([business, service])
+                    service = session.scalar(select(Service).where(Service.slug == "solar-panel-cleaning"))
+                    assert service is not None, "A fresh catalogue must include solar panel cleaning."
+                    session.add(business)
                     session.flush()
                     service_id = str(service.id)
                     session.add(ServicePrice(service_id=service.id, pricing_type="fixed", base_price=Decimal("550.00")))
@@ -102,7 +102,7 @@ def run_servers(database_url: str, preview: bool) -> None:
                 if monotonic() > deadline or not api_thread.is_alive():
                     raise RuntimeError("The local API did not start.")
                 sleep(.05)
-            web_env = {**os.environ, "API_BASE_URL": api_base, "DASHBOARD_ORIGIN": dashboard,
+            web_env = {**os.environ, "API_BASE_URL": api_base.removesuffix("/api/v1"), "DASHBOARD_ORIGIN": dashboard,
                        "NEXT_TELEMETRY_DISABLED": "1"}
             process = subprocess.Popen(["node", "node_modules/next/dist/bin/next", "dev",
                                         "--hostname", "127.0.0.1", "--port", str(port)], cwd=DASHBOARD, env=web_env)

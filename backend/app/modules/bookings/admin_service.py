@@ -11,12 +11,13 @@ from app.modules.admins.models import AdminUser
 from app.modules.admins.permissions import AdminRole, Permission, ROLE_PERMISSIONS, enforce_permission
 from app.modules.admins.reporting_dates import business_zone, date_filters
 from app.modules.admins.sessions import AdminContext, lock_authorized_admin
-from app.modules.bookings.admin_schemas import AdminBookingCard, AdminBookingDetails, AdminBookingHistory
+from app.modules.bookings.admin_schemas import AdminBookingCard, AdminBookingDetails, AdminBookingFollowUp, AdminBookingHistory
 from app.modules.bookings.admin_schemas import AdminBookingQuery, CurrentTechnician
 from app.modules.bookings.models import Booking, BookingAddress
 from app.modules.bookings.repository import booking_filters, lock_booking, not_found
 from app.modules.bookings.schemas import AdminBookingLocation, BookingAddressResponse
 from app.modules.bookings.serialization import booking_card, booking_details
+from app.modules.bookings.service import address_snapshot, validate_booking_details
 from app.modules.bookings.status import BookingStatus, STATUS_LABELS
 from app.modules.bookings.transitions import transition_locked_booking
 from app.modules.customers.credentials import utc_now
@@ -43,14 +44,15 @@ def _current_technician(row: BookingAssignment | None, name: str | None) -> Curr
 
 
 def _admin_card(booking: Booking, assignment: CurrentTechnician | None = None) -> AdminBookingCard:
+    card = booking_card(booking)
     address = booking.address
     fields = (
         address.address_line, address.address_line_2, address.locality, address.city,
         address.district, address.state, address.postal_code, address.landmark,
-    )
-    summary = ", ".join(dict.fromkeys(field for field in fields if field))
+    ) if address else ()
+    summary = ", ".join(dict.fromkeys(field for field in fields if field)) or card.address_summary
     return AdminBookingCard(
-        **booking_card(booking).model_dump(exclude={"address_summary"}),
+        **card.model_dump(exclude={"address_summary"}),
         address_summary=summary, customer_id=booking.customer_id,
         customer_name=booking.customer_name_snapshot, customer_phone=booking.customer_phone_snapshot,
         updated_at=booking.updated_at,
@@ -92,7 +94,7 @@ def list_admin_bookings(db: Session, query: AdminBookingQuery) -> AdminPage[Admi
     total = db.scalar(count.where(*filters)) or 0
     rows = db.execute(
         _with_current_technician(select(Booking, BookingAssignment, Technician.full_name).select_from(Booking))
-        .join(Booking.address).where(*filters)
+        .outerjoin(Booking.address).where(*filters)
         .options(contains_eager(Booking.address), joinedload(Booking.pricing))
         .order_by(*order).offset(query.offset).limit(query.page_size)
     )
@@ -158,6 +160,10 @@ def change_booking_status(
         role = AdminRole(actor.role)
         enforce_permission(role, Permission.BOOKINGS_READ)
         booking = lock_booking(db, booking_id, customer_id=None)
+        if target == BookingStatus.CONFIRMED and (
+            booking.service_date is None or db.scalar(select(BookingAddress.id).where(BookingAddress.booking_id == booking.id)) is None
+        ):
+            raise AppError(409, "booking_details_required", "Add the service date and location before confirming the booking.")
         previous = booking.status
         transition_locked_booking(
             db, booking, target, utc_now(), actor_type="admin", actor_id=actor.id, reason=reason,
@@ -171,11 +177,39 @@ def change_booking_status(
         return read_admin_booking(db, booking.id, show_private_notes=Permission.BOOKINGS_NOTES_READ in ROLE_PERMISSIONS[role])
 
 
+def record_booking_follow_up(
+    db: Session, context: AdminContext, booking_id: UUID, data: AdminBookingFollowUp,
+) -> AdminBookingDetails:
+    with db.begin():
+        actor = lock_authorized_admin(db, context, Permission.BOOKINGS_UPDATE)
+        role = AdminRole(actor.role)
+        enforce_permission(role, Permission.BOOKINGS_READ)
+        booking = lock_booking(db, booking_id, customer_id=None)
+        if booking.status != BookingStatus.PENDING:
+            raise AppError(409, "booking_follow_up_unavailable", "Only pending bookings can receive missing details.")
+        if data.service_date is not None and booking.service_date is not None:
+            raise AppError(409, "booking_date_already_set", "A date is already recorded. Refresh the booking.")
+        if data.address is not None and db.scalar(select(BookingAddress.id).where(BookingAddress.booking_id == booking.id)) is not None:
+            raise AppError(409, "booking_location_already_set", "A location is already recorded. Refresh the booking.")
+
+        coverage = validate_booking_details(db, data.service_date, data.address)
+        if data.service_date is not None:
+            booking.service_date = data.service_date
+        if data.address is not None:
+            booking.coverage_matched = coverage
+            db.add(address_snapshot(booking.id, data.address))
+        booking.updated_at = utc_now()
+        record_audit(db, "booking_follow_up_recorded", actor_id=actor.id, resource_id=booking.id, resource_type="booking")
+        db.flush()
+        return read_admin_booking(db, booking.id, show_private_notes=Permission.BOOKINGS_NOTES_READ in ROLE_PERMISSIONS[role])
+
+
 def read_admin_booking_location(db: Session, booking_id: UUID) -> AdminBookingLocation:
     booking = db.scalar(select(Booking).where(Booking.id == booking_id).options(joinedload(Booking.address)))
     if booking is None:
         raise not_found()
     return AdminBookingLocation(
         booking_id=booking.id, booking_reference=booking.booking_reference,
-        coverage_matched=booking.coverage_matched, address=BookingAddressResponse.model_validate(booking.address),
+        coverage_matched=booking.coverage_matched,
+        address=BookingAddressResponse.model_validate(booking.address) if booking.address else None,
     )

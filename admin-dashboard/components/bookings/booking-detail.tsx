@@ -14,7 +14,7 @@ import { routes } from '@/services/routes';
 import type { Assignment, Booking, Note, Page } from '@/types/api';
 import { AssignmentDialog, AssignmentTable } from './assignment-workflow';
 
-type BookingAction = 'confirm' | 'complete' | 'cancel' | 'assign' | 'reassign' | 'unassign';
+type BookingAction = 'confirm' | 'complete' | 'cancel' | 'assign' | 'reassign' | 'unassign' | 'follow-up';
 
 export function BookingDetail({ id }: { id: string }) {
   const query = useApi<Booking>(routes.booking(id));
@@ -33,7 +33,10 @@ function BookingRecord({ booking, refresh, busy }: { booking: Booking; refresh: 
       (booking.status === 'in_progress' && can('bookings.update')) || (booking.status === 'confirmed' && can('bookings.reassign'))
     ));
   const { address, pricing, status, current_assignment: current } = booking;
-  const map = mapsLink(address.google_maps_url);
+  const map = mapsLink(address?.google_maps_url);
+  const missingDetails = !booking.service_date || !address;
+  const canEditPending = can('bookings.update') && status === 'pending';
+  const requestedDate = booking.service_date ? dateText(booking.service_date) : 'Date to be confirmed';
   const allowAssign = can('technicians.assignments.manage', 'bookings.assign') && status === 'confirmed' && !current;
   const allowReassign = can('technicians.assignments.manage', 'bookings.reassign') && (
     (Boolean(current) && ['assigned','in_progress'].includes(status)) || (status === 'confirmed' && (assignmentHistory.data?.total ?? 0) > 0)
@@ -44,22 +47,22 @@ function BookingRecord({ booking, refresh, busy }: { booking: Booking; refresh: 
   const primary = selected === 'confirm' ? 'Confirm booking' : selected === 'complete' ? 'Complete booking' : 'Cancel booking';
 
   return <>
-    <Heading title={booking.booking_reference} description={booking.service_name + ' · ' + dateText(booking.service_date)}
+    <Heading title={booking.booking_reference} description={booking.service_name + ' · ' + requestedDate}
       actions={<><Badge value={status} /><Refresh run={refresh} busy={busy} /></>} />
     <div className="wide-split">
       <div className="stack">
         <Panel title="Booking details"><div className="panel-body"><Details items={[
-          ['Service', booking.service_name], ['Requested date', dateText(booking.service_date)], ['Submitted', timestamp(booking.created_at)],
+          ['Service', booking.service_name], ['Requested date', requestedDate], ['Submitted', timestamp(booking.created_at)],
           ['Customer', can('customers.read') ? <RecordLink href={'/customers/' + booking.customer_id}>{booking.customer.full_name}</RecordLink> : booking.customer.full_name],
           ['Phone', booking.customer.phone_number], ['Alternate phone', booking.customer.alternate_phone_number],
           ['Instructions', booking.customer_instructions], ['Cancellation reason', booking.cancellation_reason],
         ]} /></div></Panel>
         <Panel title="Location" action={map && <Button asChild variant="outline" size="sm"><a href={map} target="_blank" rel="noopener noreferrer"><MapPin size={15} />Google Maps</a></Button>}>
-          <div className="panel-body"><Details items={[
-            ['Address', [address.address_line, address.address_line_2, address.locality, address.city, address.district, address.state, address.postal_code].filter(Boolean).join(', ')],
+          <div className="panel-body">{address ? <Details items={[
+            ['Address', [address.address_line, address.address_line_2, address.locality, address.city, address.district, address.state, address.postal_code].filter(Boolean).join(', ') || 'GPS location provided'],
             ['Landmark', address.landmark], ['Recipient', address.recipient_name], ['Recipient phone', address.recipient_phone],
             ['GPS coordinates', address.latitude != null && address.longitude != null ? `${address.latitude}, ${address.longitude}` : '—'],
-          ]} /></div>
+          ]} /> : <p>Location to be confirmed</p>}</div>
         </Panel>
         <Panel title="Status history">
           {booking.history.length === 0 ? <Empty title="No status changes recorded" /> : <ol className="activity-list">{booking.history.map((event, index) =>
@@ -69,13 +72,15 @@ function BookingRecord({ booking, refresh, busy }: { booking: Booking; refresh: 
       </div>
       <div className="stack">
         <Panel title="Actions"><div className="panel-body actions">
-          {can('bookings.update') && status === 'pending' && <Button onClick={() => setSelected('confirm')}>Confirm booking</Button>}
+          {canEditPending && (missingDetails
+            ? <Button onClick={() => setSelected('follow-up')}>Record missing details</Button>
+            : <Button onClick={() => setSelected('confirm')}>Confirm booking</Button>)}
           {allowComplete && <Button onClick={() => setSelected('complete')}>Mark complete</Button>}
           {allowCancel && <Button variant="outline" onClick={() => setSelected('cancel')}>Cancel booking</Button>}
           {allowAssign && <Button onClick={() => setSelected('assign')}><UserRoundCheck size={16} />Assign technician</Button>}
           {allowReassign && <Button variant="outline" onClick={() => setSelected('reassign')}>Reassign</Button>}
           {allowUnassign && <Button variant="outline" onClick={() => setSelected('unassign')}>Unassign</Button>}
-          {!(allowComplete || allowCancel || allowAssign || allowReassign || allowUnassign || (can('bookings.update') && status === 'pending'))
+          {!(allowComplete || allowCancel || allowAssign || allowReassign || allowUnassign || canEditPending)
             && <p className="muted small">No actions available for this booking.</p>}
         </div></Panel>
         <Panel title="Current assignment"><div className="panel-body">
@@ -92,6 +97,18 @@ function BookingRecord({ booking, refresh, busy }: { booking: Booking; refresh: 
     </div>
     {can('technicians.assignments.read') && <Panel title="Assignment history"><AssignmentTable path={routes.assignments(booking.id)} /></Panel>}
     {can('bookings.notes.read') && <BookingNotes id={booking.id} legacy={booking.legacy_admin_notes} />}
+    {selected === 'follow-up' && <FormDialog title="Record missing details" description="Enter the information confirmed with the customer."
+      fields={[
+        ...(!booking.service_date ? [{ name: 'date', label: 'Service date', type: 'date' as const }] : []),
+        ...(!address ? [{ name: 'address', label: 'Address or location', type: 'textarea' as const,
+          rule: z.string().trim().max(800, 'Use up to 800 characters.') }] : []),
+      ]}
+      validate={(values) => values.date || values.address?.trim() ? undefined : 'Enter a date or location.'}
+      close={() => setSelected(undefined)} submitLabel="Save details"
+      submit={(values) => action.mutateAsync({ path: routes.bookingFollowUp(booking.id), method: 'PATCH', body: {
+        service_date: values.date || undefined,
+        address: values.address?.trim() ? { address_line: values.address.trim(), location_source: 'manual' } : undefined,
+      } })} />}
     {selected && ['assign', 'reassign', 'unassign'].includes(selected) && <AssignmentDialog booking={booking}
       mode={selected as 'assign' | 'reassign' | 'unassign'} close={() => setSelected(undefined)} />}
     {selected && ['confirm', 'complete', 'cancel'].includes(selected) && <FormDialog title={primary}

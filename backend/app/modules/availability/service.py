@@ -7,7 +7,7 @@ from app.modules.availability.schemas import AvailabilityResult
 from app.modules.business.schedule import business_today, schedule_on_date
 from app.modules.business.schemas import DEFAULT_TIMEZONE
 from app.modules.business.service import find_active_business
-from app.modules.locations.schemas import LocationFields
+from app.modules.locations.schemas import CoverageResult, LocationFields
 from app.modules.locations.service import check_coverage
 from app.modules.services.service import find_active_service
 
@@ -21,9 +21,11 @@ def evaluate_availability(
 
 
 def evaluate_service_date(
-    db: Session, requested_date: date, location: LocationFields, *, service_active: bool,
+    db: Session, requested_date: date, location: LocationFields | None, *, service_active: bool,
 ) -> AvailabilityResult:
-    coverage = check_coverage(db, location)
+    coverage = check_coverage(db, location) if location is not None else CoverageResult(
+        covered=None, reason="no_confident_match", message="The business needs to confirm the location.",
+    )
     business = find_active_business(db)
     timezone = business.timezone if business else db.info.get("business_timezone", DEFAULT_TIMEZONE)
     operating, closure = schedule_on_date(db, business.id, requested_date) if business else (None, None)

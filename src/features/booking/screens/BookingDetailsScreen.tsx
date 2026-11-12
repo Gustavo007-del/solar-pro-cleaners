@@ -114,7 +114,8 @@ function BookingDetails({ booking, onChange }: { booking: Booking; onChange: () 
         <SectionHeader title={t('booking.details.service')} />
         <AppCard><DetailRows rows={[
           { label: t('booking.summary.service'), value: booking.serviceName },
-          { label: t('integration.requestedDate'), value: formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) },
+          { label: t('integration.requestedDate'), value: booking.serviceDate
+            ? formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) : t('booking.form.datePending') },
           { label: t('integration.estimate'), value: booking.estimatedAmount !== null
             ? displayAmount(booking.estimatedAmount, booking.currency)
             : t(booking.pricing.pricing_type === 'custom_quote' ? 'integration.quote' : 'integration.priceUnknown') },
@@ -135,7 +136,10 @@ function BookingDetails({ booking, onChange }: { booking: Booking; onChange: () 
           </View>
         )}
       />
-      <BookingLocationDetails location={booking.location} />
+      {booking.location ? <BookingLocationDetails location={booking.location} /> : <AppCard>
+        <SectionHeader title={t('booking.details.location')} />
+        <Text style={typography.body}>{t('booking.form.locationPending')}</Text>
+      </AppCard>}
       {booking.additionalInstructions && (
         <AppCard>
           <SectionHeader title={t('booking.instructions.title')} />

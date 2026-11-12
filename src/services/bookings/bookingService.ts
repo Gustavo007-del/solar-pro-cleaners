@@ -9,12 +9,13 @@ import { bookingStatuses, normalizeBookingStatus, type Booking, type BookingCard
 const timestamp = z.iso.datetime({ offset: true });
 const card = z.object({
   id: z.uuid(), booking_reference: z.string(), status: z.string(), service_name: z.string(),
-  service_date: z.iso.date(), estimated_amount: money.nullable(), currency: z.string().regex(/^[A-Z]{3}$/),
-  created_at: timestamp, address_summary: z.string(),
+  service_date: z.iso.date().nullable(), estimated_amount: money.nullable(), currency: z.string().regex(/^[A-Z]{3}$/),
+  created_at: timestamp, address_summary: z.string().nullable(),
 });
 const details = card.extend({
   customer: z.object({ full_name: z.string(), phone_number: z.string(), alternate_phone_number: z.string().nullable() }),
-  address: addressSnapshot, customer_instructions: z.string().nullable(), cancellation_reason: z.string().nullable(),
+  address: addressSnapshot.extend({ address_line: z.string().nullable() }).nullable(),
+  customer_instructions: z.string().nullable(), cancellation_reason: z.string().nullable(),
   cancelled_at: timestamp.nullable(), updated_at: timestamp,
   pricing: z.object({
     pricing_type: pricingType.nullable(), base_price: money.nullable(), price_per_panel: money.nullable(),
@@ -27,9 +28,13 @@ const historyPage = pageSchema(card).extend({
   status_counts: z.record(z.enum(bookingStatuses), z.number().int().nonnegative()).nullable().optional(),
 });
 
-export type CreateBookingInput = {
-  service_id: string; service_date: string; pricing: { panel_quantity?: number }; customer_instructions: string | null;
-} & ({ address: ReturnType<typeof addressPayload>; saved_address_id?: never } | { saved_address_id: string; address?: never });
+export type BookingAddressSelection =
+  | { address?: Omit<ReturnType<typeof addressPayload>, 'address_line'> & { address_line: string | null }; saved_address_id?: never }
+  | { saved_address_id: string; address?: never };
+
+export type CreateBookingInput = BookingAddressSelection & {
+  service_id: string; service_date?: string; pricing: { panel_quantity?: number }; customer_instructions: string | null;
+};
 
 function toCard(item: z.infer<typeof card>): BookingCardData {
   return {
@@ -41,7 +46,7 @@ function toCard(item: z.infer<typeof card>): BookingCardData {
 
 function toBooking(item: z.infer<typeof details>): Booking {
   return {
-    ...toCard(item), location: fromAddress(item.address), customerName: item.customer.full_name,
+    ...toCard(item), location: item.address ? fromAddress(item.address) : null, customerName: item.customer.full_name,
     primaryPhone: item.customer.phone_number, alternatePhone: item.customer.alternate_phone_number,
     additionalInstructions: item.customer_instructions, cancellationReason: item.cancellation_reason,
     cancelledAt: item.cancelled_at, updatedAt: item.updated_at,

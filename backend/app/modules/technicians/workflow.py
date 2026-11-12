@@ -35,7 +35,7 @@ def _job(row: BookingAssignment, booking: Booking) -> TechnicianJob:
     )
     return TechnicianJob(
         id=row.id, booking_id=booking.id, booking_reference=booking.booking_reference,
-        service_date=booking.service_date, service_name=booking.service_name_snapshot,
+        service_date=row.service_date, service_name=booking.service_name_snapshot,
         assignment_status=row.assignment_status, customer_name=booking.customer_name_snapshot,
         customer_phone=booking.customer_phone_snapshot, address=address,
         customer_instructions=booking.customer_instructions,

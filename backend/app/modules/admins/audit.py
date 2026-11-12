@@ -11,7 +11,7 @@ from app.modules.bookings.status import BookingStatus
 AuditAction = Literal[
     "login_succeeded", "login_failed", "refresh_replay", "logout", "logout_all", "password_changed",
     "owner_provisioned", "user_created", "user_updated", "role_changed", "account_activated", "account_deactivated",
-    "booking_status_changed", "booking_cancelled", "booking_note_created", "booking_note_updated",
+    "booking_status_changed", "booking_cancelled", "booking_follow_up_recorded", "booking_note_created", "booking_note_updated",
     "booking_note_deleted", "customer_updated", "customer_activated", "customer_deactivated",
     "technician_created", "technician_updated", "technician_activated", "technician_deactivated",
     "technician_availability_changed", "technician_leave_created", "technician_leave_updated",

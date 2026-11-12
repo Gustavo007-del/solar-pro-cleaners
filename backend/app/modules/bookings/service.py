@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from hashlib import sha256
 from secrets import choice
@@ -14,7 +14,7 @@ from app.modules.bookings.metrics import status_counts
 from app.modules.bookings.models import Booking, BookingAddress, BookingPricingSnapshot, BookingStatusHistory
 from app.modules.bookings.repository import lock_booking, owned_details, page_bookings
 from app.modules.bookings.schemas import (
-    BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery, CustomerBookingPage,
+    BookingAddressInput, BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery, CustomerBookingPage,
 )
 from app.modules.bookings.serialization import booking_details
 from app.modules.bookings.status import BookingStatus, CUSTOMER_CANCELLABLE_STATUSES
@@ -23,6 +23,7 @@ from app.modules.customers.credentials import utc_now
 from app.modules.customers.service import CustomerContext, lock_authenticated_session
 from app.modules.locations.address_schemas import AddressInput
 from app.modules.locations.addresses import resolve_saved_address
+from app.modules.locations.service import check_coverage
 from app.modules.locations.utils import google_maps_url
 from app.modules.pricing.service import find_applicable_price
 from app.modules.services.service import require_active_service
@@ -71,11 +72,24 @@ def _pricing_snapshot(
     )
 
 
-def _address_snapshot(booking_id: UUID, address: AddressInput) -> BookingAddress:
+def address_snapshot(booking_id: UUID, address: BookingAddressInput | AddressInput) -> BookingAddress:
     return BookingAddress(
         booking_id=booking_id, **address.model_dump(),
         google_maps_url=google_maps_url(address.latitude, address.longitude),
     )
+
+
+def validate_booking_details(
+    db: Session, service_date: date | None, address: BookingAddressInput | AddressInput | None,
+) -> bool | None:
+    if service_date is None:
+        return check_coverage(db, address).covered if address is not None else None
+    availability = evaluate_service_date(db, service_date, address, service_active=True)
+    if availability.reason == "past_date":
+        raise AppError(422, "invalid_service_date", availability.message)
+    if availability.reason in {"closure", "closed"}:
+        raise AppError(409, "service_date_unavailable", availability.message)
+    return availability.coverage.covered
 
 
 def create_booking(
@@ -99,14 +113,8 @@ def create_booking(
         address = data.address
         if data.saved_address_id is not None:
             address = resolve_saved_address(db, customer.id, data.saved_address_id, data.address_overrides)
-        if address is None:
-            raise AppError(422, "invalid_address", "A booking address is required.")
         service = require_active_service(db, data.service_id, lock=True)
-        availability = evaluate_service_date(db, data.service_date, address, service_active=True)
-        if availability.reason == "past_date":
-            raise AppError(422, "invalid_service_date", availability.message)
-        if availability.reason in {"closure", "closed"}:
-            raise AppError(409, "service_date_unavailable", availability.message)
+        coverage_matched = validate_booking_details(db, data.service_date, address)
 
         now = utc_now()
         booking_id = uuid4()
@@ -116,11 +124,12 @@ def create_booking(
             "status": BookingStatus.PENDING, "status_version": 0, "service_date": data.service_date,
             "customer_name_snapshot": customer.full_name, "customer_phone_snapshot": customer.phone_number,
             "alternate_phone_snapshot": customer.alternate_phone_number, "service_name_snapshot": service.name,
-            "customer_instructions": data.customer_instructions, "coverage_matched": availability.coverage.covered,
+            "customer_instructions": data.customer_instructions, "coverage_matched": coverage_matched,
             "idempotency_key_hash": key_hash, "request_hash": request_hash, "created_at": now, "updated_at": now,
         })
+        if address is not None:
+            db.add(address_snapshot(booking_id, address))
         db.add_all([
-            _address_snapshot(booking_id, address),
             pricing,
             BookingStatusHistory(
                 booking_id=booking_id, sequence=0, old_status=None, new_status=BookingStatus.PENDING,

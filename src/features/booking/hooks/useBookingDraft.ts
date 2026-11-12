@@ -1,20 +1,12 @@
 import { useRef, useState } from 'react';
 
 import type { CapturedLocation } from '@/services/location/currentLocation';
-import { fromAddress, type SavedAddress } from '@/services/api/addresses';
-import type { CreateBookingInput } from '@/services/bookings/bookingService';
-import type { BookingLocation, ManualBookingAddress } from '@/types/booking';
-
-import type { ManualAddressInput } from '../schemas/addressSchema';
+import { addressPayload, type SavedAddress } from '@/services/api/addresses';
+import type { BookingAddressSelection, CreateBookingInput } from '@/services/bookings/bookingService';
 
 type BookingDraft = {
   captured: CapturedLocation | null;
-  manualAddress: ManualBookingAddress | null;
-  addressFields: ManualAddressInput | null;
-  editingAddress: boolean;
-  locationConfirmed: boolean;
-  detailsConfirmed: boolean;
-  confirmedProfileVersion?: string;
+  addressText: string;
   instructions: string;
   serviceId?: string;
   serviceDate?: string;
@@ -29,31 +21,27 @@ export function clearBookingDraft(customerId: string) {
   sessionDrafts.delete(customerId);
 }
 
-export function getSelectedLocation(draft: BookingDraft): BookingLocation | null {
-  if (draft.editingAddress) return null;
-  if (draft.savedAddress) return fromAddress(draft.savedAddress);
-  const { captured, manualAddress } = draft;
-
-  if (captured && manualAddress) {
-    return { method: 'gps', coordinates: captured.coordinates, address: manualAddress, isAddressManuallyEdited: true };
+export function bookingAddressFields(draft: BookingDraft): BookingAddressSelection {
+  if (draft.savedAddress) return { saved_address_id: draft.savedAddress.id };
+  const { captured } = draft;
+  const text = draft.addressText.trim();
+  if (captured?.address && text === captured.address.formattedAddress) {
+    return { address: addressPayload({ method: 'gps', coordinates: captured.coordinates,
+      address: captured.address, isAddressManuallyEdited: false }) };
   }
-  if (captured?.address) {
-    return { method: 'gps', coordinates: captured.coordinates, address: captured.address, isAddressManuallyEdited: false };
-  }
-  if (manualAddress) {
-    return { method: 'manual', coordinates: null, address: manualAddress, isAddressManuallyEdited: false };
-  }
-  return null;
+  if (!text && !captured) return {};
+  return { address: {
+    address_line: text || null,
+    latitude: captured?.coordinates.latitude,
+    longitude: captured?.coordinates.longitude,
+    location_source: captured ? (text ? 'gps_with_manual_address' : 'gps') : 'manual',
+  } };
 }
 
 export function useBookingDraft(customerId: string) {
   const [draft, setDraft] = useState<BookingDraft>(() => sessionDrafts.get(customerId) ?? {
     captured: null,
-    manualAddress: null,
-    addressFields: null,
-    editingAddress: false,
-    locationConfirmed: false,
-    detailsConfirmed: false,
+    addressText: '',
     instructions: '',
   });
   const currentDraft = useRef(draft);

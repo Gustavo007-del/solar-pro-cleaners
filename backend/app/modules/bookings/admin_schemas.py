@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import StringConstraints, model_validator
 
-from app.modules.bookings.schemas import BookingDetails, BookingHistoryItem, BookingListItem, BookingListQuery, CalendarDate, Note
+from app.modules.bookings.schemas import BookingAddressInput, BookingDetails, BookingHistoryItem, BookingListItem, BookingListQuery, CalendarDate, Note
 from app.modules.bookings.status import BookingStatus
 from app.modules.technicians.status import AssignmentStatus
 from app.schemas.catalogue import ConfigInput, PostalCode, PublicRecord, Text120
@@ -63,6 +63,17 @@ class AdminBookingDetails(BookingDetails):
 class AdminBookingStatusUpdate(ConfigInput):
     status: BookingStatus
     reason: Note | None = None
+
+
+class AdminBookingFollowUp(ConfigInput):
+    service_date: CalendarDate | None = None
+    address: BookingAddressInput | None = None
+
+    @model_validator(mode="after")
+    def require_detail(self) -> "AdminBookingFollowUp":
+        if self.service_date is None and self.address is None:
+            raise ValueError("Provide a service date or location.")
+        return self
 
 
 class BookingAdminNoteInput(ConfigInput):

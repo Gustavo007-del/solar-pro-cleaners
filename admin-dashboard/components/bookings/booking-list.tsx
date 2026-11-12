@@ -17,7 +17,8 @@ export function bookingColumns(compact = false): ColumnDef<BookingCard>[] {
   const main: ColumnDef<BookingCard>[] = [
     { accessorKey: 'booking_reference', header: 'Reference', cell: ({ row }) => <RecordLink href={'/bookings/' + row.original.id}>{row.original.booking_reference}</RecordLink> },
     { accessorKey: 'service_name', header: 'Service' },
-    { accessorKey: 'service_date', header: 'Service date', cell: ({ row }) => dateText(row.original.service_date) },
+    { accessorKey: 'service_date', header: 'Service date', cell: ({ row }) => row.original.service_date
+      ? dateText(row.original.service_date) : 'Date to be confirmed' },
     { accessorKey: 'status', header: 'Status', cell: ({ row }) => <Badge value={row.original.status} /> },
   ];
   if (compact) return main;
@@ -25,7 +26,8 @@ export function bookingColumns(compact = false): ColumnDef<BookingCard>[] {
     { accessorKey: 'customer_name', header: 'Customer', cell: ({ row }) => <div><div className="strong">{row.original.customer_name ?? '—'}</div>
       <small className="muted">{row.original.customer_phone ?? ''}</small></div> },
     main[1], main[2],
-    { accessorKey: 'address_summary', header: 'Location', cell: ({ row }) => <span className="cell-location" title={row.original.address_summary}>{row.original.address_summary}</span> },
+    { accessorKey: 'address_summary', header: 'Location', cell: ({ row }) => <span className="cell-location" title={row.original.address_summary ?? undefined}>
+      {row.original.address_summary ?? 'Location to be confirmed'}</span> },
     { accessorKey: 'estimated_amount', header: 'Estimate', cell: ({ row }) => money(row.original.estimated_amount, row.original.currency) },
     main[3],
     { id: 'technician', header: 'Technician', cell: ({ row }) => row.original.current_assignment ? <div>

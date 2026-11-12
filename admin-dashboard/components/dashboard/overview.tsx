@@ -27,7 +27,8 @@ export function Kpi({ label, value, icon: Icon, tone = 'green', detail }: {
 const recentColumns: ColumnDef<RecentBooking>[] = [
   { accessorKey: 'booking_reference', header: 'Reference', cell: ({ row }) => <RecordLink href={'/bookings/' + row.original.id}>{row.original.booking_reference}</RecordLink> },
   { accessorKey: 'service_name', header: 'Service' },
-  { accessorKey: 'service_date', header: 'Scheduled for', cell: ({ row }) => dateText(row.original.service_date) },
+  { accessorKey: 'service_date', header: 'Scheduled for', cell: ({ row }) => row.original.service_date
+    ? dateText(row.original.service_date) : 'Date to be confirmed' },
   { accessorKey: 'status', header: 'Status', cell: ({ row }) => <Badge value={row.original.status} /> },
 ];
 

@@ -28,7 +28,7 @@ async function readBody(request: NextRequest) {
 }
 
 function settings(request: NextRequest) {
-  const base = new URL(process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || '');
+  const base = new URL(process.env.API_BASE_URL?.trim() || process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || '');
   const configured = process.env.DASHBOARD_ORIGIN;
   const origin = new URL(configured || request.nextUrl.origin);
   const deployed = process.env.NODE_ENV === 'production';
@@ -37,6 +37,7 @@ function settings(request: NextRequest) {
     || origin.search || origin.hash || (deployed && (!configured || origin.protocol !== 'https:' || base.protocol !== 'https:'))) {
     throw new Error('Invalid dashboard API configuration.');
   }
+  base.pathname = base.pathname.replace(/\/+$/, '') || '/api/v1';
   return { base, origin: origin.origin };
 }
 
@@ -85,7 +86,7 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   }
 
   const upstream = new URL(config.base.href);
-  upstream.pathname = upstream.pathname.replace(/\/$/, '') + '/' + path.join('/');
+  upstream.pathname += '/' + path.join('/');
   upstream.search = request.nextUrl.search;
   try {
     const response = await fetch(upstream, { method, headers, body: body || undefined, cache: 'no-store',

@@ -94,13 +94,15 @@ function BookingReceipt({ booking }: { booking: Booking }) {
           <Text selectable style={[typography.section, styles.reference]}>{booking.reference}</Text>
           <DetailRows rows={[
             { label: t('booking.summary.service'), value: booking.serviceName },
-            { label: t('integration.requestedDate'), value: formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) },
+            { label: t('integration.requestedDate'), value: booking.serviceDate
+              ? formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) : t('booking.form.datePending') },
             { label: t('integration.estimate'), value: booking.estimatedAmount !== null
               ? displayAmount(booking.estimatedAmount, booking.currency) : t('integration.priceUnknown') },
-            { label: t('booking.summary.address'), value: booking.location.address.formattedAddress },
+            { label: t('booking.summary.address'), value: booking.location
+              ? booking.location.address.formattedAddress || t('booking.form.gpsAdded') : t('booking.form.locationPending') },
           ]} />
           <BookingStatusBadge status={booking.status} />
-          {booking.coverageMatched !== true && <Text style={typography.supporting}>{t('integration.coverageManual')}</Text>}
+          {booking.location && booking.coverageMatched !== true && <Text style={typography.supporting}>{t('integration.coverageManual')}</Text>}
         </AppCard>
       </Entrance>
 

@@ -53,14 +53,14 @@ export type BookingCardData = {
   reference: string;
   status: BookingStatus | 'unknown';
   serviceName: string;
-  serviceDate: string;
+  serviceDate: string | null;
   estimatedAmount: string | null;
   currency: string;
   createdAt: string;
-  addressSummary: string;
+  addressSummary: string | null;
 };
 export type Booking = BookingCardData & {
-  location: BookingLocation;
+  location: BookingLocation | null;
   customerName: string;
   primaryPhone: string;
   alternatePhone: string | null;

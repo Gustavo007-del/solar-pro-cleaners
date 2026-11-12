@@ -32,3 +32,10 @@ export function openPhoneDialer(value?: string) {
   const phone = normalizeInternationalPhone(value);
   return openExternalLink(phone ? `tel:${phone}` : undefined);
 }
+
+export async function openWhatsAppChat(value?: string): Promise<ExternalLinkResult> {
+  const phone = normalizeInternationalPhone(value)?.slice(1);
+  if (!phone) return 'unavailable';
+  const result = await openExternalLink(`whatsapp://send?phone=${phone}`);
+  return result === 'opened' ? result : openExternalLink(`https://wa.me/${phone}`);
+}

@@ -38,7 +38,7 @@ export function BookingLocationDetails({ location }: { location: BookingLocation
   return (
     <AppCard>
       <SectionHeader title={t('booking.details.location')} action={<MapPin size={sizes.icon.md} color={colors.deep} />} />
-      <Text selectable style={[typography.body, styles.address]}>{address.formattedAddress}</Text>
+      <Text selectable style={[typography.body, styles.address]}>{address.formattedAddress || t('booking.form.gpsAdded')}</Text>
       {rows.length > 0 && <><Divider /><DetailRows rows={rows} /></>}
       {coordinates && (
         <View style={styles.actions}>

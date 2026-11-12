@@ -24,6 +24,7 @@ if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdk
 
 const plugins: NonNullable<ExpoConfig['plugins']> = [
   'expo-router',
+  '@react-native-community/datetimepicker',
   ['expo-secure-store', { faceIDPermission: false }],
   ['expo-splash-screen', { image: branding.assets.splash, imageWidth: 160, resizeMode: 'contain', backgroundColor: palette.deep }],
   ['expo-navigation-bar', { enforceContrast: true, barStyle: 'dark', visibility: 'visible' }],

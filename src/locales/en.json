@@ -331,6 +331,28 @@
     }
   },
   "booking": {
+    "form": {
+      "followUpHint": "You can leave both fields blank. We’ll confirm any missing details with you.",
+      "optionalDate": "Preferred date (optional)",
+      "dateFormat": "Use DD/MM/YYYY, or leave this blank.",
+      "chooseDate": "Choose a date",
+      "done": "Done",
+      "clearDate": "Clear date",
+      "optionalAddress": "Address or location (optional)",
+      "addressPlaceholder": "Enter your address or a nearby landmark",
+      "useLocation": "Use My Location",
+      "gpsAdded": "GPS location added.",
+      "hideSaved": "Hide saved addresses",
+      "clearLocation": "Clear location",
+      "addNotes": "Add a note (optional)",
+      "contactNumber": "We’ll call you at {{phone}}.",
+      "datePending": "Date to be confirmed",
+      "locationPending": "Location to be confirmed",
+      "chooseService": "Choose a service",
+      "changeService": "Change service",
+      "serviceLoadError": "We couldn’t load the service. Please try again.",
+      "quantityError": "Enter a panel count from 1 to 10,000."
+    },
     "title": "Book Solar Panel Cleaning",
     "description": "Provide your installation location so our team can arrange your cleaning service.",
     "service": {
@@ -353,7 +375,7 @@
       "refresh": "Refresh Location",
       "confirm": "Confirm Location",
       "openMaps": "Open in Google Maps",
-      "settings": "Open Device Settings",
+      "settings": "Open Settings",
       "mapsError": "Couldn’t open Google Maps. Please try again.",
       "settingsError": "Couldn’t open Settings. Open it from your device or enter the address manually.",
       "failure": {

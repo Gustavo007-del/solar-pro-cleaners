@@ -1,39 +1,35 @@
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { LocateFixed } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { z } from 'zod';
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 
-import { PrimaryButton, TextButton } from '@/components/buttons/Buttons';
+import { OutlineButton, PrimaryButton, TextButton } from '@/components/buttons/Buttons';
 import { AppTextArea, AppTextInput } from '@/components/forms/TextFields';
-import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { Divider, ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
 import { AppHeader } from '@/components/layout/Headers';
-import { Entrance } from '@/components/motion/Entrance';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { appRoutes } from '@/constants/routes';
-import { useApiMessage } from '@/hooks/useApiMessage';
-import { ServiceCatalogue } from '@/features/home/components/ServiceCatalogue';
 import { ServicePricing } from '@/features/home/components/ServicePricing';
-import { addresses, addressPayload, coverageFields } from '@/services/api/addresses';
-import { catalogue } from '@/services/api/catalogue';
-import { ApiError } from '@/services/api/client';
+import { useApiMessage } from '@/hooks/useApiMessage';
+import { usePagedResource } from '@/hooks/usePagedResource';
 import { useSaveAction } from '@/hooks/useSaveAction';
 import { useApplication } from '@/providers/ApplicationProvider';
+import { catalogue, type Service } from '@/services/api/catalogue';
+import { ApiError } from '@/services/api/client';
 import { bookingService, rememberBookingReceipt, type CreateBookingInput } from '@/services/bookings/bookingService';
 import { prepareSubmission, resolveSubmission } from '@/services/bookings/submissionJournal';
 import { colors, spacing, typography } from '@/theme';
 import { maxBookingInstructions } from '@/types/booking';
 import type { CustomerProfile } from '@/types/customerProfile';
 
-import { BookingReview } from '../components/BookingReview';
+import { BookingDateField } from '../components/BookingDateField';
 import { SavedAddressPicker } from '../components/SavedAddressPicker';
+import { bookingAddressFields, useBookingDraft } from '../hooks/useBookingDraft';
 import { useBookingResource } from '../hooks/useBookingResource';
-import { CustomerDetailsCard } from '../components/CustomerDetailsCard';
-import { LocationCard } from '../components/LocationCard';
-import { ManualAddressForm } from '../components/ManualAddressForm';
-import { getSelectedLocation, useBookingDraft } from '../hooks/useBookingDraft';
 import { useLocationCapture } from '../hooks/useLocationCapture';
-import { addressToForm } from '../schemas/addressSchema';
+import { parseBookingDate } from '../utils/bookingDate';
 
 function leaveBooking() {
   if (router.canGoBack()) router.back();
@@ -54,7 +50,7 @@ export function BookingScreen() {
       <AppHeader title={t('booking.title')} onBack={leaveBooking} />
       <ScrollContainer>
         <AppCard>
-          <Text style={[typography.body, styles.supporting]}>{t('booking.customer.missing')}</Text>
+          <Text style={typography.body}>{t('booking.customer.missing')}</Text>
           <PrimaryButton label={t('booking.customer.edit')} onPress={() => router.dismissTo(appRoutes.profile)} />
         </AppCard>
       </ScrollContainer>
@@ -66,76 +62,70 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { draft, currentDraft, updateDraft, clearDraft } = useBookingDraft(profile.customerId);
-  const locationCapture = useLocationCapture();
+  const location = useLocationCapture();
   const { pending, failed, error, save } = useSaveAction();
   const message = useApiMessage();
-  const serviceId = draft.serviceId ?? initialServiceId;
-  const serviceDate = draft.serviceDate ?? '';
-  const quantity = draft.panelQuantity ?? '';
+  const services = usePagedResource<Service, Awaited<ReturnType<typeof catalogue.services>>>(catalogue.services);
+  const preferredId = draft.serviceId ?? initialServiceId;
+  const serviceId = services.data?.first.total === 1 ? services.data.items[0]?.id : preferredId;
   const readService = useCallback(() => catalogue.service(serviceId ?? ''), [serviceId]);
   const service = useBookingResource(serviceId, readService);
-  const [check, setCheck] = useState<{ key: string; coverage: string; availability?: string; unavailable: boolean }>();
-  const availabilityAction = useSaveAction();
-  const saveAddress = useSaveAction();
+  const [showServices, setShowServices] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const [showNotes, setShowNotes] = useState(Boolean(draft.instructions));
+  const [settingsError, setSettingsError] = useState(false);
   const frozen = pending || Boolean(draft.submission);
-  const [selectService, setSelectService] = useState(false);
-  const selected = getSelectedLocation(draft);
-  const confirmedLocation = draft.locationConfirmed ? selected : null;
-  const dateValid = z.iso.date().safeParse(serviceDate).success;
+  const dateText = draft.serviceDate ?? '';
+  const serviceDate = parseBookingDate(dateText);
+  const quantity = draft.panelQuantity ?? '';
   const needsQuantity = service.data?.pricing?.pricing_type === 'per_panel';
   const quantityValid = !needsQuantity || /^[1-9]\d{0,4}$/.test(quantity) && Number(quantity) <= 10000;
-  const checkKey = confirmedLocation ? JSON.stringify([serviceId, serviceDate, addressPayload(confirmedLocation)]) : '';
-  const availability = check?.key === checkKey ? check : undefined;
-  const canReview = Boolean(confirmedLocation && service.data && !service.failed && dateValid && quantityValid)
-    && !locationCapture.loading && !availability?.unavailable;
-  const detailsConfirmed = draft.detailsConfirmed && draft.confirmedProfileVersion === profile.updatedAt;
+  const canSubmit = Boolean(serviceId && service.data && !service.failed && quantityValid && (!dateText.trim() || serviceDate));
+  const hasGps = Boolean(draft.captured);
+  const showSettings = location.failure === 'permissionDenied' || location.failure === 'permissionBlocked'
+    || location.failure === 'servicesDisabled';
+  const showServiceChoices = !serviceId || showServices || service.failed;
+  const chooseAnother = (services.data?.first.total ?? 0) > 1;
 
   function captureLocation() {
     Keyboard.dismiss();
-    updateDraft({ locationConfirmed: false, detailsConfirmed: false, savedAddress: undefined });
-    void locationCapture.capture((captured) => updateDraft({ captured, manualAddress: null, addressFields: null }));
-  }
-
-  function editAddress() {
-    locationCapture.cancelCapture();
-    updateDraft({
-      editingAddress: true,
-      captured: draft.savedAddress && selected?.coordinates ? { coordinates: selected.coordinates, address: selected.address } : draft.captured,
-      addressFields: addressToForm(selected?.address),
-      locationConfirmed: false,
-      detailsConfirmed: false,
+    setSettingsError(false);
+    void location.capture((captured) => {
+      const previous = currentDraft.current;
+      if (previous.submission) return;
+      const typedAddress = previous.savedAddress || previous.addressText === previous.captured?.address?.formattedAddress
+        ? '' : previous.addressText;
+      updateDraft({ captured, savedAddress: undefined,
+        addressText: captured.address?.formattedAddress ?? typedAddress });
     });
   }
 
-  function checkAvailability() {
-    if (!confirmedLocation || !serviceId || !dateValid) return;
-    const fields = coverageFields(confirmedLocation.address);
-    void availabilityAction.save(async () => {
-      const [coverage, availability] = await Promise.all([
-        addresses.coverage(confirmedLocation),
-        fields.postal_code || fields.locality || fields.city || fields.district
-          ? catalogue.availability(serviceId, serviceDate, fields) : Promise.resolve(undefined),
-      ]);
-      setCheck({
-        key: checkKey, coverage: coverage.message, availability: availability?.message,
-        unavailable: Boolean(availability && !['candidate', 'confirmation_required'].includes(availability.reason)),
-      });
-    });
+  async function openSettings() {
+    setSettingsError(false);
+    try {
+      if (location.failure === 'servicesDisabled' && Platform.OS === 'android') {
+        await Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+      } else {
+        await Linking.openSettings();
+      }
+    } catch {
+      setSettingsError(true);
+    }
   }
 
   function submitBooking() {
     const current = currentDraft.current;
-    const location = getSelectedLocation(current);
-    if (!current.submission && (!location || !serviceId || !canReview || !detailsConfirmed)) return;
+    if (!current.submission && (!serviceId || !canSubmit)) return;
+    location.cancelCapture();
     void save(async () => {
       Keyboard.dismiss();
       let submission = current.submission;
-      if (!submission && location && serviceId) {
+      if (!submission && serviceId) {
         const request: CreateBookingInput = {
           service_id: serviceId, service_date: serviceDate,
           pricing: { panel_quantity: needsQuantity ? Number(quantity) : undefined },
           customer_instructions: current.instructions.trim() || null,
-          ...(current.savedAddress ? { saved_address_id: current.savedAddress.id } : { address: addressPayload(location) }),
+          ...bookingAddressFields(current),
         };
         submission = { id: await prepareSubmission(profile.customerId, request), request };
       }
@@ -144,7 +134,6 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
       try {
         const booking = await bookingService.createBooking(submission.request, submission.id);
         rememberBookingReceipt(profile.customerId, booking);
-        // The server has already committed. A local cleanup failure cannot undo the booking.
         await resolveSubmission(profile.customerId, submission.id).catch(() => undefined);
         clearDraft(submittedDraft);
         if (navigation.isFocused()) router.replace({ pathname: appRoutes.bookingSuccess, params: { bookingId: booking.id } });
@@ -153,6 +142,10 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
             && failure.code !== 'idempotency_conflict') {
           await resolveSubmission(profile.customerId, submission.id).catch(() => undefined);
           updateDraft({ submission: undefined });
+          if (failure.code === 'service_not_found') {
+            service.refresh();
+            void services.refresh();
+          }
         }
         throw failure;
       }
@@ -164,131 +157,97 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
       <AppHeader title={t('booking.title')} onBack={pending ? undefined : leaveBooking} />
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollContainer keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
-          <Entrance style={styles.content}>
-            <Text style={[typography.body, styles.supporting]}>{t('booking.description')}</Text>
-            {(!serviceId || selectService) && !frozen && <ServiceCatalogue selectedId={serviceId}
-              onSelect={(id) => { setSelectService(false); updateDraft({ serviceId: id, detailsConfirmed: false }); }} />}
-            {serviceId && <AppCard>
-              {service.loading && <Text style={typography.supporting}>{t('common.loading')}</Text>}
-              {service.data && !service.failed && <>
-                <Text style={typography.section}>{service.data.name}</Text>
-                <ServicePricing pricing={service.data.pricing} />
-              </>}
-              {service.failed && <>
-                <Text style={styles.error}>{message(service.error, t('integration.noServices'))}</Text>
-                <TextButton label={t('common.retry')} onPress={service.refresh} />
-              </>}
-              {!frozen && !selectService && <TextButton label={t('integration.services')} onPress={() => setSelectService(true)} />}
-            </AppCard>}
-            <AppCard>
-              <AppTextInput label={t('integration.requestedDate')} value={serviceDate} placeholder="YYYY-MM-DD"
-                maxLength={10} editable={!frozen} onChangeText={(value) => updateDraft({ serviceDate: value, detailsConfirmed: false })} />
-              <Text style={typography.supporting}>{serviceDate && !dateValid ? t('integration.dateRequired') : t('integration.dateHint')}</Text>
+          <AppCard style={styles.card}>
+            {service.data && !service.failed ? <>
+              <Text accessibilityRole="header" style={typography.section}>{service.data.name}</Text>
+              <ServicePricing pricing={service.data.pricing} />
               {needsQuantity && <AppTextInput label={t('integration.panelQuantity')} value={quantity}
                 editable={!frozen} keyboardType="number-pad" maxLength={5}
-                onChangeText={(value) => updateDraft({ panelQuantity: value, detailsConfirmed: false })} />}
-            </AppCard>
-            <SavedAddressPicker selected={draft.savedAddress?.id} disabled={frozen} onSelect={(address) => {
-              if (currentDraft.current.submission) return;
-              locationCapture.cancelCapture();
-              updateDraft({ savedAddress: address, captured: null, manualAddress: null, editingAddress: false,
-                locationConfirmed: true, detailsConfirmed: false });
-            }} />
-            <LocationCard
-              captured={draft.captured}
-              selected={selected}
-              confirmed={Boolean(confirmedLocation)}
-              capturing={locationCapture.loading}
-              failure={locationCapture.failure}
-              disabled={frozen}
-              onCapture={captureLocation}
-              onEdit={editAddress}
-              onConfirm={() => {
-                if (getSelectedLocation(currentDraft.current)) updateDraft({ locationConfirmed: true, detailsConfirmed: false });
-              }}
-              editor={draft.editingAddress ? (
-                <ManualAddressForm
-                  disabled={frozen}
-                  defaults={draft.addressFields ?? addressToForm(draft.captured?.address)}
-                  onChange={(field, value) => {
-                    const current = currentDraft.current;
-                    const fields = current.addressFields ?? addressToForm(current.captured?.address);
-                    updateDraft({ addressFields: { ...fields, [field]: value } });
-                  }}
-                  onSave={(manualAddress) => updateDraft({
-                    manualAddress,
-                    savedAddress: undefined,
-                    addressFields: addressToForm(manualAddress),
-                    editingAddress: false,
-                  })}
-                  onCancel={() => { Keyboard.dismiss(); updateDraft({ editingAddress: false, locationConfirmed: Boolean(draft.savedAddress) }); }}
-                />
-              ) : undefined}
-            />
-            {confirmedLocation && <AppCard>
-              <TextButton label={t('integration.availability')} disabled={frozen || !dateValid || !serviceId || availabilityAction.pending}
-                onPress={checkAvailability} />
-              {availabilityAction.pending && <Text style={typography.supporting}>{t('common.loading')}</Text>}
-              {availabilityAction.failed && <Text style={styles.error}>{message(availabilityAction.error, t('error.description'))}</Text>}
-              {availability && <Text style={typography.supporting}>{availability.coverage}</Text>}
-              {availability?.availability && <Text style={typography.supporting}>{availability.availability}</Text>}
-              {!draft.savedAddress && <TextButton label={t('integration.saveAddress')} disabled={frozen || saveAddress.pending}
-                onPress={() => { void saveAddress.save(async () => {
-                  const saved = await addresses.create(confirmedLocation);
-                  if (!currentDraft.current.submission && getSelectedLocation(currentDraft.current)?.address === confirmedLocation.address)
-                    updateDraft({ savedAddress: saved });
-                }); }} />}
-              {saveAddress.failed && <Text style={styles.error}>{message(saveAddress.error, t('error.save'))}</Text>}
-            </AppCard>}
-            <AppCard>
-              <AppTextArea
-                label={t('booking.instructions.label')}
-                placeholder={t('booking.instructions.placeholder')}
-                hint={t('booking.instructions.count', { used: draft.instructions.length, max: maxBookingInstructions })}
-                value={draft.instructions}
-                editable={!frozen}
-                maxLength={maxBookingInstructions}
-                onChangeText={(instructions) => updateDraft({ instructions, detailsConfirmed: false })}
-              />
-            </AppCard>
-            <CustomerDetailsCard details={profile} action={
-              <TextButton
-                label={t('booking.customer.edit')}
-                compact
-                disabled={frozen}
-                onPress={() => {
-                  updateDraft({ detailsConfirmed: false });
-                  router.dismissTo(appRoutes.profile);
-                }}
-              />
-            } />
-            <Entrance key={confirmedLocation ? 'confirmed' : 'unconfirmed'} variant="fade">
-              <BookingReview
-                profile={profile}
-                serviceName={service.data?.name}
-                serviceDate={serviceDate}
-                location={confirmedLocation}
-                instructions={draft.instructions}
-                checked={detailsConfirmed}
-                disabled={!canReview || frozen}
-                onCheck={(checked) => updateDraft({ detailsConfirmed: checked, confirmedProfileVersion: checked ? profile.updatedAt : undefined })}
-              />
-            </Entrance>
-          </Entrance>
+                error={quantity && !quantityValid ? t('booking.form.quantityError') : undefined}
+                onChangeText={(panelQuantity) => updateDraft({ panelQuantity })} />}
+              {chooseAnother && !showServices && <TextButton label={t('booking.form.changeService')}
+                disabled={frozen} onPress={() => setShowServices(true)} />}
+            </> : (service.loading || services.loading) && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+            {service.failed && <View style={styles.group}>
+              <Text accessibilityLiveRegion="polite" style={styles.error}>{message(service.error, t('booking.form.serviceLoadError'))}</Text>
+              <TextButton label={t('common.retry')} disabled={frozen} onPress={service.refresh} />
+            </View>}
+            {showServiceChoices && !frozen && <>
+              {services.data && services.data.first.total > 1 &&
+                <Text accessibilityRole="header" style={typography.label}>{t('booking.form.chooseService')}</Text>}
+              {!serviceId && services.data?.first.total === 0 && <>
+                <Text style={typography.body}>{t('integration.noServices')}</Text>
+                <TextButton label={t('common.retry')} onPress={() => { void services.refresh(); }} />
+              </>}
+              {services.error != null && <>
+                <Text style={styles.error}>{message(services.error, t('booking.form.serviceLoadError'))}</Text>
+                <TextButton label={t('common.retry')} onPress={() => { void (services.data ? services.loadMore() : services.refresh()); }} />
+              </>}
+              {services.data?.items.filter((item) => item.id !== serviceId).map((item) => (
+                <OutlineButton key={item.id} label={item.name} onPress={() => {
+                  updateDraft({ serviceId: item.id, panelQuantity: '' });
+                  setShowServices(false);
+                }} />
+              ))}
+              {services.data?.hasNext && <TextButton label={t('integration.loadMore')} disabled={services.more}
+                onPress={() => { void services.loadMore(); }} />}
+            </>}
+          </AppCard>
 
-          <View style={styles.footer}>
-            {failed && (
-              <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{message(error, t('booking.submitError'))}</Text>
-            )}
+          <AppCard style={styles.card}>
+            <Text style={typography.supporting}>{t('booking.form.followUpHint')}</Text>
+            <BookingDateField value={dateText} disabled={frozen}
+              onChange={(serviceDate) => updateDraft({ serviceDate })} />
+            <Divider />
+            <AppTextArea label={t('booking.form.optionalAddress')} placeholder={t('booking.form.addressPlaceholder')}
+              value={draft.addressText} maxLength={800} editable={!frozen} style={styles.address}
+              onChangeText={(addressText) => {
+                location.cancelCapture();
+                setSettingsError(false);
+                updateDraft({ addressText, savedAddress: undefined });
+              }} />
+            <OutlineButton icon={LocateFixed} label={t('booking.form.useLocation')} disabled={frozen}
+              loading={location.loading} loadingLabel={t('booking.location.getting')} onPress={captureLocation} />
+            {hasGps && <Text accessibilityLiveRegion="polite" style={typography.supporting}>{t('booking.form.gpsAdded')}</Text>}
+            {location.failure && <Text accessibilityLiveRegion="polite" style={typography.supporting}>
+              {t(`booking.location.failure.${location.failure}`)}
+            </Text>}
+            {showSettings && <OutlineButton label={t('booking.location.settings')} disabled={frozen}
+              onPress={() => { void openSettings(); }} />}
+            {settingsError && <Text accessibilityLiveRegion="polite" style={styles.error}>{t('booking.location.settingsError')}</Text>}
+            <View style={styles.actions}>
+              <TextButton label={t(showSaved ? 'booking.form.hideSaved' : 'integration.savedAddresses')}
+                disabled={frozen} onPress={() => setShowSaved(!showSaved)} />
+              {(hasGps || draft.addressText.trim() !== '') && <TextButton label={t('booking.form.clearLocation')}
+                disabled={frozen} onPress={() => {
+                  location.cancelCapture();
+                  setSettingsError(false);
+                  updateDraft({ captured: null, addressText: '', savedAddress: undefined });
+                }} />}
+            </View>
+            {showSaved && !frozen && <SavedAddressPicker selected={draft.savedAddress?.id} disabled={frozen} onSelect={(address) => {
+              if (currentDraft.current.submission) return;
+              location.cancelCapture();
+              setSettingsError(false);
+              updateDraft({ savedAddress: address, captured: null, addressText: address.address_line });
+              setShowSaved(false);
+            }} />}
+          </AppCard>
+
+          <AppCard style={styles.card}>
+            {showNotes ? <AppTextArea label={t('booking.instructions.label')} style={styles.address} value={draft.instructions}
+              editable={!frozen} maxLength={maxBookingInstructions} onChangeText={(instructions) => updateDraft({ instructions })} />
+              : <TextButton label={t('booking.form.addNotes')} disabled={frozen} onPress={() => setShowNotes(true)} />}
+            <Text style={typography.supporting}>{t('booking.form.contactNumber', { phone: profile.primaryPhone })}</Text>
+          </AppCard>
+
+          <View style={styles.group}>
+            {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>
+              {message(error, t('booking.submitError'))}
+            </Text>}
             {draft.submission && !pending && <Text style={typography.supporting}>{t('integration.retrySameBooking')}</Text>}
-            <PrimaryButton
-              label={t(draft.submission ? 'common.retry' : 'booking.submit')}
-              loadingLabel={t('booking.submitting')}
-              disabled={!draft.submission && (!canReview || !detailsConfirmed || saveAddress.pending)}
-              loading={pending}
-              fullWidth
-              onPress={submitBooking}
-            />
+            <PrimaryButton label={t(draft.submission ? 'common.retry' : 'booking.submit')} loadingLabel={t('booking.submitting')}
+              disabled={!draft.submission && !canSubmit} loading={pending} fullWidth onPress={submitBooking} />
           </View>
         </ScrollContainer>
       </KeyboardAvoidingView>
@@ -298,8 +257,10 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { gap: spacing.md },
-  footer: { gap: spacing.xs },
-  supporting: { color: colors.muted },
+  content: { gap: spacing.sm, paddingTop: spacing.sm },
+  card: { gap: spacing.xs },
+  group: { gap: spacing.xs },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing.xs },
+  address: { minHeight: 64 },
   error: { color: colors.error },
 });

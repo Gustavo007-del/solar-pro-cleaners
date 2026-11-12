@@ -37,7 +37,7 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     service_id: Mapped[UUID] = mapped_column(ForeignKey("services.id", ondelete="RESTRICT"))
     status: Mapped[BookingStatus] = mapped_column(status_type("status"), server_default=text("'pending'"))
     status_version: Mapped[int] = mapped_column(Integer, server_default=text("0"))
-    service_date: Mapped[date] = mapped_column(Date)
+    service_date: Mapped[date | None] = mapped_column(Date)
     customer_name_snapshot: Mapped[str] = mapped_column(String(100))
     customer_phone_snapshot: Mapped[str] = mapped_column(String(13))
     alternate_phone_snapshot: Mapped[str | None] = mapped_column(String(13))
@@ -54,7 +54,7 @@ class Booking(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     idempotency_key_hash: Mapped[str | None] = mapped_column(String(64))
     request_hash: Mapped[str | None] = mapped_column(String(64))
 
-    address: Mapped["BookingAddress"] = relationship(lazy="raise")
+    address: Mapped["BookingAddress | None"] = relationship(lazy="raise")
     pricing: Mapped["BookingPricingSnapshot"] = relationship(lazy="raise")
     history: Mapped[list["BookingStatusHistory"]] = relationship(
         lazy="raise", order_by="BookingStatusHistory.sequence",
@@ -72,10 +72,11 @@ class BookingAddress(UUIDPrimaryKeyMixin, Base):
         ),
         CheckConstraint("latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name="coordinate_range"),
         CheckConstraint("postal_code IS NULL OR postal_code ~ '^[1-9][0-9]{5}$'", name="postal_code_format"),
+        CheckConstraint("address_line IS NOT NULL OR location_source = 'gps'", name="address_line_or_gps"),
     )
 
     booking_id: Mapped[UUID] = mapped_column(ForeignKey("bookings.id", ondelete="RESTRICT"), unique=True)
-    address_line: Mapped[str] = mapped_column(String(800))
+    address_line: Mapped[str | None] = mapped_column(String(800))
     address_line_2: Mapped[str | None] = mapped_column(String(800))
     recipient_name: Mapped[str | None] = mapped_column(String(100))
     recipient_phone: Mapped[str | None] = mapped_column(String(13))

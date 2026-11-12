@@ -45,7 +45,7 @@ class RecentBooking(PublicRecord):
     id: UUID
     booking_reference: str
     service_name: str
-    service_date: date
+    service_date: date | None
     status: BookingStatus
     created_at: datetime
     updated_at: datetime

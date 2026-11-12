@@ -19,8 +19,9 @@ Use a dedicated least-privilege runtime role. Use TLS and prefer sslmode=verify-
 1. Confirm a verified restore point. Test the migration and application on staging with representative data. Use `alembic upgrade head --sql` or an explicit offline revision range to review the SQL.
 2. Run one release job from backend in the new checkout or image. Supply `MIGRATION_DATABASE_URL` for the schema role, using a direct or session-pooled connection. It is required for migration runs when the runtime uses the transaction pooler. Run `alembic current`, then `alembic upgrade head`, then verify the new revision. Web workers never apply migrations.
 3. Phase 9 adds a nullable audit request ID and a technician workload index. It caps lock acquisition at five seconds. Schedule a quiet window for a large assignment table because the index build can block writes.
-4. On failure, stop the release, check the revision and transaction result, resolve the cause and retry the reviewed job. Keep the previous app image available. Use a forward corrective migration to preserve data. If restore is required, recover to an isolated target first and reconcile writes after the restore point.
-5. Deploy the web workers after migration succeeds. Check readiness and liveness and test a booking read and an audited operation with designated accounts.
+4. Revision `20261112_0009` supports pending bookings with no date or address. It publishes Solar Panel Cleaning with pricing to be confirmed if the catalogue has no records. Existing services, including inactive ones, are preserved. Deploy the updated API and dashboard before distributing the updated mobile app. Smoke-test `/api/v1/services` and an optional-details booking with a test account.
+5. On failure, stop the release, check the revision and transaction result, resolve the cause and retry the reviewed job. Keep the previous app image available. Use a forward corrective migration to preserve data. If restore is required, recover to an isolated target first and reconcile writes after the restore point.
+6. Deploy the web workers after migration succeeds. Check readiness and liveness and test a booking read and an audited operation with designated accounts.
 
 ## Operations and privacy
 

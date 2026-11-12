@@ -38,7 +38,9 @@ def _latest_assignment(db: Session, booking_id: UUID) -> BookingAssignment | Non
     )
 
 
-def _assignment_clock(db: Session, service_date: date) -> tuple[datetime, ZoneInfo]:
+def _assignment_clock(db: Session, service_date: date | None) -> tuple[datetime, ZoneInfo]:
+    if service_date is None:
+        raise AppError(409, "booking_details_required", "Add the service date before assigning a technician.")
     zone = business_zone(db)
     now = utc_now().astimezone(zone)
     if service_date < now.date():
@@ -46,7 +48,7 @@ def _assignment_clock(db: Session, service_date: date) -> tuple[datetime, ZoneIn
     return now, zone
 
 
-def _require_eligible(db: Session, technician: Technician, service_date: date) -> None:
+def _require_eligible(db: Session, technician: Technician, service_date: date | None) -> None:
     now, zone = _assignment_clock(db, service_date)
     available = effective_availability(db, [technician], service_date, zone.key)[technician.id]
     if not available.available:

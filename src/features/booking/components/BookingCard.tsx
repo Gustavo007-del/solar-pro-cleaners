@@ -23,7 +23,8 @@ export function BookingCard({ booking, onPress }: { booking: BookingCardData; on
           <View style={styles.copy}>
             <Text style={[typography.label, styles.reference]}>{booking.reference}</Text>
             <Text style={[typography.section, styles.title]}>{booking.serviceName}</Text>
-            <Text style={[typography.metadata, styles.muted]}>{formatBookingDate(booking.serviceDate, i18n.resolvedLanguage)}</Text>
+            <Text style={[typography.metadata, styles.muted]}>{booking.serviceDate
+              ? formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) : t('booking.form.datePending')}</Text>
             <Text style={[typography.metadata, styles.muted]}>
               {t('booking.details.submittedAt')} · {formatBookingDate(booking.createdAt, i18n.resolvedLanguage)}
             </Text>
@@ -33,7 +34,7 @@ export function BookingCard({ booking, onPress }: { booking: BookingCardData; on
         <View style={styles.address}>
           <MapPin color={colors.muted} size={sizes.icon.sm} />
           <View style={styles.copy}>
-            <Text numberOfLines={2} style={[typography.supporting, styles.title]}>{booking.addressSummary}</Text>
+            <Text numberOfLines={2} style={[typography.supporting, styles.title]}>{booking.addressSummary ?? t('booking.form.locationPending')}</Text>
             {booking.estimatedAmount !== null && <Text style={[typography.metadata, styles.muted]}>
               {displayAmount(booking.estimatedAmount, booking.currency)}
             </Text>}

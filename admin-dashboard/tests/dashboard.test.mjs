@@ -159,6 +159,26 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   assert.equal((await send('/admin/dashboard/summary')).total_bookings, 2);
   assert.equal((await send('/admin/dashboard/bookings-analytics?interval=month')).cancelled, 1);
 
+  const followUpCustomer = await seedCustomer('9000000202');
+  const pendingResponse = await fetch(fixture.api + '/bookings', {
+    method: 'POST', headers: { Authorization: 'Bearer ' + followUpCustomer.tokens.access_token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service_id: fixture.service_id }),
+  });
+  assert.equal(pendingResponse.status, 201);
+  const pending = await pendingResponse.json();
+  const pendingPath = '/admin/bookings/' + pending.id;
+  assert.equal((await send('/admin/bookings?search=' + pending.booking_reference)).items[0].address_summary, null);
+  assert.equal((await send(pendingPath)).address, null);
+  assert.equal((await send('/admin/dashboard/summary')).recent_created.find((row) => row.id === pending.id).service_date, null);
+  await send(pendingPath + '/status', { method: 'PATCH', body: { status: 'confirmed' }, status: 409 });
+  await staffClient.send(pendingPath + '/follow-up', { method: 'PATCH', body: { service_date: fixture.date }, status: 403 });
+  const followUp = await send(pendingPath + '/follow-up', { method: 'PATCH', body: {
+    service_date: fixture.date, address: { address_line: 'Opposite the post office', location_source: 'manual' },
+  } });
+  assert.equal(followUp.service_date, fixture.date);
+  assert.equal(followUp.address.address_line, 'Opposite the post office');
+  assert.equal((await send(pendingPath + '/status', { method: 'PATCH', body: { status: 'confirmed' } })).status, 'confirmed');
+
   await staffClient.send('/admin/me', { method: 'PATCH', body: { full_name: 'Updated Staff' } });
   await staffClient.send('/admin/auth/change-password', { method: 'POST',
     body: { current_password: staffPassword, new_password: 'Staff-fixture-25!sunrise' } });

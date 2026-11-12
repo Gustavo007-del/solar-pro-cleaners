@@ -11,10 +11,10 @@ from app.modules.admins.responses import prevent_caching
 from app.modules.admins.sessions import AdminContext
 from app.modules.bookings.admin_notes import create_note, delete_note, list_notes, update_note
 from app.modules.bookings.admin_schemas import (
-    AdminBookingCard, AdminBookingDetails, AdminBookingQuery, AdminBookingStatusUpdate,
+    AdminBookingCard, AdminBookingDetails, AdminBookingFollowUp, AdminBookingQuery, AdminBookingStatusUpdate,
     BookingAdminNoteInput, BookingAdminNoteResponse,
 )
-from app.modules.bookings.admin_service import change_booking_status, list_admin_bookings, read_admin_booking
+from app.modules.bookings.admin_service import change_booking_status, list_admin_bookings, read_admin_booking, record_booking_follow_up
 from app.modules.bookings.schemas import BookingCancellation
 from app.modules.bookings.status import BookingStatus
 from app.schemas.catalogue import PublicPageQuery
@@ -49,6 +49,11 @@ def booking(booking_id: UUID, db: DatabaseSession, admin: BookingReader) -> Admi
               description="Cancelling through this operation also requires bookings.cancel.")
 def status(booking_id: UUID, data: AdminBookingStatusUpdate, db: DatabaseSession, admin: BookingEditor) -> AdminBookingDetails:
     return change_booking_status(db, admin, booking_id, data.status, reason=data.reason)
+
+
+@router.patch("/{booking_id}/follow-up", summary="Record missing details for a pending booking", responses=conflict)
+def follow_up(booking_id: UUID, data: AdminBookingFollowUp, db: DatabaseSession, admin: BookingEditor) -> AdminBookingDetails:
+    return record_booking_follow_up(db, admin, booking_id, data)
 
 
 @router.post("/{booking_id}/cancel", summary="Cancel a booking through the admin workflow",

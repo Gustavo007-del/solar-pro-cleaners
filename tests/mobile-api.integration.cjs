@@ -130,7 +130,7 @@ test('customer mobile contracts against PostgreSQL', { skip: !fixture.base }, as
   assert.equal((await raw('/admin/me', { token: sessionRecord(app).tokens.access_token })).status, 401);
 
   const services = await app.catalogue.services();
-  assert.equal(services.total, 4);
+  assert.equal(services.total, 5);
   assert.equal(services.items[0].id, fixture.service);
   await assert.rejects(app.catalogue.service(fixture.hidden), is(404));
   const service = await app.catalogue.service(fixture.service);
@@ -217,6 +217,32 @@ test('customer mobile contracts against PostgreSQL', { skip: !fixture.base }, as
   }, randomUUID());
   assert.equal(manualBooking.estimatedAmount, '450.00');
   assert.equal(manualBooking.location.coordinates, null);
+
+  const defaultService = services.items.find((item) => item.name === 'Solar Panel Cleaning');
+  const optionalInput = { service_id: defaultService.id, pricing: {}, customer_instructions: null };
+  const optionalKey = randomUUID();
+  const pending = await app.bookingService.createBooking(optionalInput, optionalKey);
+  assert.equal(pending.status, 'pending');
+  assert.equal(pending.serviceDate, null);
+  assert.equal(pending.location, null);
+  assert.equal(pending.coverageMatched, null);
+  assert.equal((await app.bookingService.createBooking(optionalInput, optionalKey)).id, pending.id);
+  assert.equal((await app.bookingService.getBookingById(pending.id)).location, null);
+  const pendingCard = (await app.bookingService.list('pending', 1)).items.find((item) => item.id === pending.id);
+  assert.equal(pendingCard.serviceDate, null);
+  assert.equal(pendingCard.addressSummary, null);
+  const dateOnly = await app.bookingService.createBooking({ ...optionalInput, service_date: fixture.serviceDate }, randomUUID());
+  assert.equal(dateOnly.serviceDate, fixture.serviceDate);
+  assert.equal(dateOnly.location, null);
+  const addressOnly = await app.bookingService.createBooking({ ...optionalInput,
+    address: { address_line: 'Near the post office', location_source: 'manual' },
+  }, randomUUID());
+  assert.equal(addressOnly.serviceDate, null);
+  assert.equal(addressOnly.location.address.formattedAddress, 'Near the post office');
+  const gpsOnly = await app.bookingService.createBooking({ ...optionalInput,
+    address: { address_line: null, latitude: 9.93, longitude: 76.27, location_source: 'gps' },
+  }, randomUUID());
+  assert.deepEqual(gpsOnly.location.coordinates, { latitude: 9.93, longitude: 76.27 });
 
   app.transport.forceStatus = 503;
   await assert.rejects(app.catalogue.services(), is(503));

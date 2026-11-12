@@ -24,8 +24,8 @@ The inline address contract below remains supported. See the [locations contract
 | Field | Type and meaning |
 | --- | --- |
 | `service_id` | UUID from the active service catalogue. |
-| `service_date` | Requested business-local date in YYYY-MM-DD form. |
-| `address.address_line` | Required complete readable installation address, up to 800 characters. |
+| `service_date` | Optional requested business-local date in YYYY-MM-DD form. |
+| `address.address_line` | Free-form address or landmark, up to 800 characters. May be omitted for a GPS-only location. Omit `address` entirely when no location is supplied. |
 | `address.locality`, `city`, `district`, `state`, `landmark` | Optional address fields. Supply available locality data for better coverage matching. |
 | `address.postal_code` | Optional six-digit Indian PIN code string. |
 | `address.location_source` | `gps`, `manual`, or `gps_with_manual_address`. |
@@ -46,7 +46,7 @@ Errors use the Phase 1 `error` envelope. Common cases are `401` for invalid auth
 
 ## Submission, pricing, and status
 
-Creation checks the active service, coverage, and business schedule in the same transaction as the booking write. Past dates, closed weekdays, and configured closures are rejected. Inconclusive coverage and unconfigured hours can produce a pending request for business review. An accepted request records a requested date and awaits business confirmation. It does not reserve a time slot.
+Creation requires an active service and records a pending request. It checks coverage once when a location is supplied. If a date is supplied, it checks for a past date, closed weekday, or configured closure. Customers can omit either or both optional details. A missing date returns `service_date: null`. A missing location returns `address: null`, `address_summary: null`, and `coverage_matched: null`. An authorized admin can record the missing details after contacting the customer. A request does not reserve a time slot.
 
 Pricing is selected at submission time using Phase 3 effective periods. A fixed estimate uses the configured base price, and a per-panel estimate multiplies the rate by the panel quantity. A configured minimum applies to either estimate when higher. Custom quotes and services without applicable pricing have a null estimate. Estimates are informational. Stored snapshots preserve the service name, contact details, address, pricing configuration and estimated amount even after catalogue or profile edits.
 
@@ -61,7 +61,7 @@ Customer cancellation starts with pending bookings only. Administrative transiti
 ## Expo integration
 
 - Use the server booking UUID and reference for history, details and cancellation. A UUID or reference from an older local-only app identifies only its local record.
-- Add a requested service date and ask for panel quantity when applicable. Map the formatted address to `address_line`. Map edited GPS addresses to `gps_with_manual_address`. Pass the stored address fields and coordinate pair and omit any local Maps URL, local customer snapshot, or computed price.
+- Send the requested date and location only when provided. Ask for panel quantity when applicable. Map the formatted address to `address_line` and edited GPS addresses to `gps_with_manual_address`. Pass the coordinate pair for GPS. The server supplies Maps URLs, customer snapshots, and prices.
 - Generate one idempotency key per logical submission, such as a UUID. Retain the key with its request while a response is uncertain. Retry the same payload with the same key, including after a successful token refresh. Use a new key for a deliberately new request.
 - Load history from `/my`, then use the server booking ID for details. Prefer the returned history events for the timeline. Format money from the decimal strings and show a blank or quotation state for a null estimate. Display server and local records according to their actual origin. A local record becomes a server booking only after an explicit successful submission.
 - The Alembic migration creates four booking tables with restrictive foreign keys and row-level security. Public Supabase roles have no table privileges. The trusted backend database role needs the appropriate read, write, and locking privileges. Deactivation preserves history. A separate authorized retention workflow can govern any future deletion.

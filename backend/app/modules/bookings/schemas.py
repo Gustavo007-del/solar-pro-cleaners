@@ -9,7 +9,8 @@ from pydantic import BeforeValidator, ConfigDict, Field, ModelWrapValidatorHandl
 
 from app.modules.availability.schemas import parse_requested_date
 from app.modules.bookings.status import BookingStatus
-from app.modules.locations.address_schemas import AddressInput, AddressPatch, AddressSnapshotResponse
+from app.modules.locations.address_schemas import AddressPatch, AddressSnapshotResponse, LocationSource
+from app.modules.locations.validators import validate_pair
 from app.modules.pricing.schemas import PricingType
 from app.schemas.catalogue import ConfigInput, PublicPageQuery, PublicRecord
 from app.schemas.common import Page
@@ -23,6 +24,19 @@ class BookingPricingInput(ConfigInput):
     panel_quantity: int | None = Field(default=None, strict=True, ge=1, le=10_000)
 
 
+class BookingAddressInput(AddressPatch):
+    location_source: LocationSource
+
+    @model_validator(mode="after")
+    def validate_location(self) -> "BookingAddressInput":
+        validate_pair(self.latitude, self.longitude)
+        if (self.location_source == "manual") == (self.latitude is not None):
+            raise ValueError("GPS sources require coordinates and manual addresses omit them.")
+        if self.address_line is None and self.location_source != "gps":
+            raise ValueError("Enter an address or supply GPS coordinates.")
+        return self
+
+
 class BookingCreate(ConfigInput):
     model_config = ConfigDict(json_schema_extra={"examples": [{
         "service_id": "00000000-0000-4000-8000-000000000001",
@@ -31,8 +45,8 @@ class BookingCreate(ConfigInput):
         "pricing": {"panel_quantity": 12},
     }]})
     service_id: UUID
-    service_date: CalendarDate
-    address: AddressInput | None = None
+    service_date: CalendarDate | None = None
+    address: BookingAddressInput | None = None
     saved_address_id: UUID | None = None
     address_overrides: AddressPatch | None = None
     pricing: BookingPricingInput = Field(default_factory=BookingPricingInput)
@@ -80,8 +94,8 @@ class BookingCreate(ConfigInput):
 
     @model_validator(mode="after")
     def choose_address(self) -> "BookingCreate":
-        if (self.address is None) == (self.saved_address_id is None):
-            raise ValueError("Supply either a new address or a saved address ID.")
+        if self.address is not None and self.saved_address_id is not None:
+            raise ValueError("Supply only one of a new address or a saved address ID.")
         if self.address_overrides is not None and self.saved_address_id is None:
             raise ValueError("Address overrides require a saved address ID.")
         return self
@@ -115,11 +129,11 @@ class BookingListItem(BookingStatusSummary):
     booking_reference: str
     service_id: UUID
     service_name: str
-    service_date: date
+    service_date: date | None
     estimated_amount: Decimal | None
     currency: str
     created_at: datetime
-    address_summary: str
+    address_summary: str | None
 
 
 class CustomerBookingPage(Page[BookingListItem]):
@@ -127,6 +141,7 @@ class CustomerBookingPage(Page[BookingListItem]):
 
 
 class BookingAddressResponse(AddressSnapshotResponse):
+    address_line: str | None
     google_maps_url: str | None
 
 
@@ -134,7 +149,7 @@ class AdminBookingLocation(PublicRecord):
     booking_id: UUID
     booking_reference: str
     coverage_matched: bool | None
-    address: BookingAddressResponse
+    address: BookingAddressResponse | None
 
 
 class BookingPricingResponse(PublicRecord):
@@ -162,7 +177,7 @@ class BookingHistoryItem(PublicRecord):
 
 class BookingDetails(BookingListItem):
     customer: BookingCustomerSnapshot
-    address: BookingAddressResponse
+    address: BookingAddressResponse | None
     pricing: BookingPricingResponse
     customer_instructions: str | None
     coverage_matched: bool | None

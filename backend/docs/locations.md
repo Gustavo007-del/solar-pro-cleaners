@@ -32,13 +32,13 @@ Default changes run in a transaction under the customer lock, and a partial uniq
 - `matched_service_area_id` and `matched_service_area_name`, null when unmatched.
 - A human-readable `message`.
 
-The check reuses active Phase 3 service areas and their exact PIN and qualified text matching. Coordinates alone produce an unmatched result that requires confirmation. A false coverage flag means the configuration did not establish a confident match. The legacy public service-area endpoint retains its existing nullable coverage semantics. Booking creation evaluates coverage again using the effective address.
+The check reuses active Phase 3 service areas and their exact PIN and qualified text matching. Coordinates alone require confirmation. A false coverage flag means the configuration did not establish a confident match. The legacy public service-area endpoint retains its existing nullable coverage semantics. The booking form relies on creation to evaluate coverage for the submitted location.
 
 ## Booking integration
 
-On `POST /api/v1/bookings`, send exactly one of:
+On `POST /api/v1/bookings`, either omit location or send one of the following.
 
-- `address` with the full address fields, as in Phase 4.
+- `address` with free-form address text or a GPS coordinate pair. A GPS-only address can omit `address_line`.
 - `saved_address_id` for an owned saved address, optionally with `address_overrides` containing changed address fields. Omitted override fields preserve saved values. Explicit null clears optional values. Overrides apply only to the booking.
 
 The server copies the resolved address into the existing booking snapshot within the creation transaction, including optional second line and recipient details. Those fields are returned inside booking `address` alongside the existing Maps URL. The snapshot has no foreign key to the saved address. Older booking rows retain their original values, with null for the new optional fields. Idempotent retries resolve the original booking before looking up the saved address.

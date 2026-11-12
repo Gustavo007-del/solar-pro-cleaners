@@ -9,6 +9,7 @@ export const routes = {
   me: '/admin/me',
   summary: '/admin/dashboard/summary', analytics: '/admin/dashboard/bookings-analytics',
   bookings: '/admin/bookings', booking, bookingStatus: (id: string) => booking(id) + '/status',
+  bookingFollowUp: (id: string) => booking(id) + '/follow-up',
   cancelBooking: (id: string) => booking(id) + '/cancel', notes: (id: string) => booking(id) + '/notes',
   note: (id: string, note: string) => booking(id) + '/notes/' + encodeURIComponent(note),
   assignments: (id: string) => booking(id) + '/assignments', eligible: (id: string) => booking(id) + '/eligible-technicians',

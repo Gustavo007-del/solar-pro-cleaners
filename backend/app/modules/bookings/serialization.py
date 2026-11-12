@@ -8,9 +8,11 @@ from app.modules.bookings.status import STATUS_LABELS
 
 def booking_card(booking: Booking) -> BookingListItem:
     address = booking.address
-    parts = list(dict.fromkeys(part for part in (address.locality, address.city, address.postal_code) if part))
-    summary = ", ".join(parts) or address.address_line
-    if len(summary) > 180:
+    parts = list(dict.fromkeys(part for part in (address.locality, address.city, address.postal_code) if part)) if address else []
+    summary = ", ".join(parts) or (address.address_line if address else None)
+    if not summary and address and address.latitude is not None and address.longitude is not None:
+        summary = f"{address.latitude:.5f}, {address.longitude:.5f}"
+    if summary and len(summary) > 180:
         summary = summary[:177].rstrip() + "..."
     return BookingListItem(
         id=booking.id, booking_reference=booking.booking_reference,
@@ -28,7 +30,7 @@ def booking_details(booking: Booking) -> BookingDetails:
             full_name=booking.customer_name_snapshot, phone_number=booking.customer_phone_snapshot,
             alternate_phone_number=booking.alternate_phone_snapshot,
         ),
-        address=BookingAddressResponse.model_validate(booking.address),
+        address=BookingAddressResponse.model_validate(booking.address) if booking.address else None,
         pricing=BookingPricingResponse.model_validate(booking.pricing),
         customer_instructions=booking.customer_instructions, coverage_matched=booking.coverage_matched,
         updated_at=booking.updated_at, confirmed_at=booking.confirmed_at, assigned_at=booking.assigned_at,

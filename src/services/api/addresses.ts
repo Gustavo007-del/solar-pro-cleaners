@@ -45,9 +45,9 @@ export function addressPayload(location: BookingLocation): AddressInput {
   };
 }
 
-export function fromAddress(record: z.infer<typeof addressSnapshot>): BookingLocation {
+export function fromAddress(record: Omit<z.infer<typeof addressSnapshot>, 'address_line'> & { address_line: string | null }): BookingLocation {
   const segments = [
-    ...record.address_line.split(',').map((part) => part.trim()), record.address_line_2,
+    ...(record.address_line?.split(',').map((part) => part.trim()) ?? []), record.address_line_2,
     record.locality, record.city, record.district, record.state, record.postal_code,
   ];
   const address = {

@@ -15,6 +15,7 @@ An empty list has this shape.
 | `GET /bookings` | `bookings.read` | Filters below. Returns a page of booking cards. |
 | `GET /bookings/{booking_id}` | `bookings.read` | Returns booking details and status history. |
 | `PATCH /bookings/{booking_id}/status` | `bookings.update`, plus `bookings.cancel` when cancelling | JSON with `status` and optional `reason`. Returns updated details. |
+| `PATCH /bookings/{booking_id}/follow-up` | `bookings.update` and `bookings.read` | Supply a missing `service_date`, `address`, or both on a pending booking. Returns updated details. |
 | `POST /bookings/{booking_id}/cancel` | `bookings.cancel` | Optional JSON `reason`. Returns updated details. |
 | `GET /bookings/{booking_id}/notes` | `bookings.notes.read` | `page`, `page_size`. Returns a page of private notes, newest first. |
 | `POST /bookings/{booking_id}/notes` | `bookings.notes.create` | JSON `note`, 1–4,000 characters after trimming. Returns the created note with `201`. |
@@ -29,7 +30,7 @@ Cards include booking UUID, reference, customer UUID, original name and primary 
 
 History entries include `old_status`, `new_status`, `status_label`, `created_at`, `changed_by_type`, `changed_by_id`, `changed_by_name`, and `reason`. Private history reasons and legacy admin notes require note-read permission. A note record contains `id`, `booking_id`, `admin_id`, `note`, `created_at`, and `updated_at`. New notes are separate from customer instructions and never appear in the customer API.
 
-Status changes use the existing transition graph. Administrative cancellation is allowed from pending or confirmed. A cancellation reason is customer-visible, so use a private note for internal context. Use the [technician assignment endpoints](./technicians.md#booking-assignments) to assign or remove a technician. Start and completion for assigned work belong to the internal technician workflow. Legacy in-progress records without assignment history can still transition to completed through the admin status route. Status changes, history, and audit events commit atomically.
+Status changes use the existing transition graph. Confirmation requires a recorded date and location. Administrative cancellation is allowed from pending or confirmed. A cancellation reason is customer-visible, so use a private note for internal context. Use the [technician assignment endpoints](./technicians.md#booking-assignments) to assign or remove a technician. Start and completion for assigned work belong to the internal technician workflow. Legacy in-progress records without assignment history can still transition to completed through the admin status route. Status changes, history, and audit events commit atomically.
 
 ## Customer operations
 

@@ -15,8 +15,8 @@ export type Address = {
 };
 export type CurrentAssignment = { assignment_id: string; technician_id: string; technician_name: string; assignment_status: string };
 export type BookingCard = {
-  id: string; booking_reference: string; service_id: string; service_name: string; service_date: string;
-  address_summary: string; estimated_amount: string | null; currency: string; created_at: string; status: Status;
+  id: string; booking_reference: string; service_id: string; service_name: string; service_date: string | null;
+  address_summary: string | null; estimated_amount: string | null; currency: string; created_at: string; status: Status;
   status_label: string; customer_id?: string; customer_name?: string; customer_phone?: string; current_assignment?: CurrentAssignment | null;
 };
 export type Price = { pricing_type: 'fixed' | 'per_panel' | 'custom_quote' | null; base_price?: string | null;
@@ -24,7 +24,8 @@ export type Price = { pricing_type: 'fixed' | 'per_panel' | 'custom_quote' | nul
   estimated_amount?: string | null };
 export type Booking = BookingCard & {
   customer_id: string; customer: { full_name: string; phone_number: string; alternate_phone_number: string | null };
-  address: Address; pricing: Price; customer_instructions: string | null; cancellation_reason: string | null;
+  address: (Omit<Address, 'address_line'> & { address_line: string | null }) | null;
+  pricing: Price; customer_instructions: string | null; cancellation_reason: string | null;
   legacy_admin_notes: string | null; current_assignment: CurrentAssignment | null; updated_at: string;
   history: { old_status: Status | null; new_status: Status; status_label: string; created_at: string;
     changed_by_type: string; changed_by_name: string | null; reason: string | null }[];
