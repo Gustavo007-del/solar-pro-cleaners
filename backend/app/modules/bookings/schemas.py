@@ -12,6 +12,7 @@ from app.modules.bookings.status import BookingStatus
 from app.modules.locations.address_schemas import AddressInput, AddressPatch, AddressSnapshotResponse
 from app.modules.pricing.schemas import PricingType
 from app.schemas.catalogue import ConfigInput, PublicPageQuery, PublicRecord
+from app.schemas.common import Page
 
 Note = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
 CalendarDate = Annotated[date, BeforeValidator(parse_requested_date)]
@@ -119,6 +120,10 @@ class BookingListItem(BookingStatusSummary):
     currency: str
     created_at: datetime
     address_summary: str
+
+
+class CustomerBookingPage(Page[BookingListItem]):
+    status_counts: dict[BookingStatus, int] | None = None
 
 
 class BookingAddressResponse(AddressSnapshotResponse):

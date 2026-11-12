@@ -10,10 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import AppError
 from app.modules.availability.service import evaluate_service_date
+from app.modules.bookings.metrics import status_counts
 from app.modules.bookings.models import Booking, BookingAddress, BookingPricingSnapshot, BookingStatusHistory
 from app.modules.bookings.repository import lock_booking, owned_details, page_bookings
 from app.modules.bookings.schemas import (
-    BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListItem, BookingListQuery,
+    BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery, CustomerBookingPage,
 )
 from app.modules.bookings.serialization import booking_details
 from app.modules.bookings.status import BookingStatus, CUSTOMER_CANCELLABLE_STATUSES
@@ -25,7 +26,6 @@ from app.modules.locations.addresses import resolve_saved_address
 from app.modules.locations.utils import google_maps_url
 from app.modules.pricing.service import find_applicable_price
 from app.modules.services.service import require_active_service
-from app.schemas.common import Page
 
 REFERENCE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
@@ -131,8 +131,10 @@ def create_booking(
         return booking_details(owned_details(db, customer.id, booking_id)), True
 
 
-def list_customer_bookings(db: Session, context: CustomerContext, query: BookingListQuery) -> Page[BookingListItem]:
-    return page_bookings(db, query, customer_id=context.customer_id)
+def list_customer_bookings(db: Session, context: CustomerContext, query: BookingListQuery) -> CustomerBookingPage:
+    page = page_bookings(db, query, customer_id=context.customer_id)
+    counts = status_counts(db, Booking.customer_id == context.customer_id) if query.page == 1 else None
+    return CustomerBookingPage(items=page.items, total=page.total, page=page.page, page_size=page.page_size, status_counts=counts)
 
 
 def read_customer_booking(db: Session, context: CustomerContext, booking_id: UUID) -> BookingDetails:

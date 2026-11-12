@@ -15,6 +15,8 @@ Paths below are relative to `/api/v1`. Requests with bodies use JSON. Success re
 
 The supported statuses are `pending`, `confirmed`, `assigned`, `in_progress`, `completed`, and `cancelled`. Sort order uses the creation timestamp with the booking ID as a stable tie-breaker. Page size defaults to 20 and is capped at 100.
 
+`GET /bookings/my` includes `status_counts` on page one, with totals across all statuses for the authenticated customer. Counts are independent of the requested filters. Later pages return null for that field.
+
 ### Creation body
 
 The inline address contract below remains supported. See the [locations contract](./locations.md) for selecting a saved address or applying one-time overrides.

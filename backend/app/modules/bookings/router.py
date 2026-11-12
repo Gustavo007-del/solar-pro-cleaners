@@ -6,11 +6,11 @@ from fastapi import APIRouter, Header, Query, Response, status
 from app.api.dependencies import DatabaseSession
 from app.api.rate_limits import RATE_LIMITED, rate_limit
 from app.modules.bookings.schemas import (
-    BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListItem, BookingListQuery,
+    BookingCancellation, BookingCancellationResponse, BookingCreate, BookingDetails, BookingListQuery, CustomerBookingPage,
 )
 from app.modules.bookings.service import cancel_customer_booking, create_booking, list_customer_bookings, read_customer_booking
 from app.modules.customers.dependencies import AuthenticatedCustomer
-from app.schemas.common import ErrorResponse, Page
+from app.schemas.common import ErrorResponse
 
 router = APIRouter(
     prefix="/bookings", tags=["Bookings"],
@@ -42,7 +42,7 @@ def create(
 @router.get("/my", summary="List bookings owned by the authenticated customer")
 def my_bookings(
     db: DatabaseSession, customer: AuthenticatedCustomer, query: Annotated[BookingListQuery, Query()], response: Response,
-) -> Page[BookingListItem]:
+) -> CustomerBookingPage:
     response.headers["Cache-Control"] = "no-store"
     return list_customer_bookings(db, customer, query)
 

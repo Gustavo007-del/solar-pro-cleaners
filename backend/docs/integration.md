@@ -21,7 +21,7 @@ See [backend deployment and TLS configuration](./deployment.md), [Expo environme
 
 ## Customer app
 
-The existing app still uses local storage for its profiles and bookings. Connecting a screen to the API requires an explicit submission or sync decision. A local reference does not identify a server booking.
+The Expo app reads and writes customer profiles, saved addresses and bookings through this API. Historical records from a local-only build remain separate. A local reference does not identify a server booking.
 
 | Screen or task | Routes relative to /api/v1 |
 | --- | --- |
@@ -56,7 +56,7 @@ See [booking, customer and dashboard operations](./admin-operations.md) and [tec
 
 - UUIDs are strings. Calendar dates are `YYYY-MM-DD` in business context. Timestamps are ISO 8601 with a timezone offset. Optional resource fields can be null.
 - Booking and saved-address detail coordinates are JSON numbers or null. Older deployments returned decimal strings. During a rolling upgrade, accept both and normalize once. Request coordinates still accept numbers or decimal strings. Monetary values retain decimal strings or null and should use decimal-safe formatting. A GPS coordinate pair yields a free Google Maps URL.
-- Collections take `page` and `page_size` (default 20, maximum 100) and return `items`, `total`, `page`, `page_size`, `total_pages`, `has_next` and `has_previous`. The three pagination metadata fields were added to public and customer lists in Phase 10. Fixed-size operating hours and bounded dashboard series use their domain-specific response shapes. Use the supported filters and sort values shown in OpenAPI.
+- Collections take `page` and `page_size` (default 20, maximum 100) and return `items`, `total`, `page`, `page_size`, `total_pages`, `has_next` and `has_previous`. The first page of `GET /bookings/my` also returns the customer's `status_counts` across all statuses. Later pages return null for that field. Fixed-size operating hours and bounded dashboard series use their domain-specific response shapes. Use the supported filters and sort values shown in OpenAPI.
 - API errors use `error.code`, `error.message` and `error.request_id`. Validation may include safe field paths such as `address.latitude`. Use the code for application decisions. Display the message where appropriate and retain the request ID for support.
 
 ```json

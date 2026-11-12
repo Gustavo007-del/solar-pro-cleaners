@@ -227,10 +227,51 @@ class Settings(BaseSettings):
         return url
 
 
+# @lru_cache
+# def get_settings() -> Settings:
+#     try:
+#         return Settings()
+#     except (ValidationError, SettingsError):
+#         # Settings errors may contain source values. Keep them out of startup logs.
+#         raise RuntimeError("Invalid backend configuration. See backend/.env.example.") from None
+
+import logging
+from pydantic import ValidationError
+from pydantic_settings import SettingsError
+
+logger = logging.getLogger(__name__)
+
+
 @lru_cache
 def get_settings() -> Settings:
     try:
         return Settings()
-    except (ValidationError, SettingsError):
-        # Settings errors may contain source values. Keep them out of startup logs.
-        raise RuntimeError("Invalid backend configuration. See backend/.env.example.") from None
+
+    except ValidationError as exc:
+        # Log validation details without exposing secret values.
+        for error in exc.errors(include_url=False):
+            field = ".".join(str(loc) for loc in error.get("loc", []))
+            message = error.get("msg", "Unknown validation error")
+            error_type = error.get("type", "unknown")
+
+            logger.error(
+                "Configuration validation failed: field=%s type=%s message=%s",
+                field,
+                error_type,
+                message,
+            )
+
+        raise RuntimeError(
+            "Invalid backend configuration. Check the deployment logs for the invalid setting name."
+        ) from None
+
+    except SettingsError as exc:
+        # Settings parsing errors, such as invalid JSON arrays.
+        logger.error(
+            "Configuration settings parsing failed: %s",
+            str(exc),
+        )
+
+        raise RuntimeError(
+            "Invalid backend configuration. Check the deployment logs."
+        ) from None
