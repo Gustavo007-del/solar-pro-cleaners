@@ -92,10 +92,41 @@ def register_exception_handlers(app: FastAPI) -> None:
         code, message = HTTP_ERRORS.get(exc.status_code, ("http_error", "The request could not be completed."))
         return error_response(request.scope, exc.status_code, code, message, headers=exc.headers)
 
-    @app.exception_handler(SQLAlchemyError)
-    async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
-        if isinstance(exc, IntegrityError):
-            return error_response(request.scope, 409, "conflict", "The request conflicts with existing data.")
-        if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
-            return error_response(request.scope, 503, "database_unavailable", "The database is temporarily unavailable.")
-        return error_response(request.scope, 500, "database_error", "The database operation could not be completed.")
+    # @app.exception_handler(SQLAlchemyError)
+    # async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    #     if isinstance(exc, IntegrityError):
+    #         return error_response(request.scope, 409, "conflict", "The request conflicts with existing data.")
+    #     if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
+    #         return error_response(request.scope, 503, "database_unavailable", "The database is temporarily unavailable.")
+    #     return error_response(request.scope, 500, "database_error", "The database operation could not be completed.")
+
+    import logging
+
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(SQLAlchemyError)
+async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    logger.exception("Database error occurred")
+
+    if isinstance(exc, IntegrityError):
+        return error_response(
+            request.scope,
+            409,
+            "conflict",
+            "The request conflicts with existing data."
+        )
+
+    if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
+        return error_response(
+            request.scope,
+            503,
+            "database_unavailable",
+            "The database is temporarily unavailable."
+        )
+
+    return error_response(
+        request.scope,
+        500,
+        "database_error",
+        "The database operation could not be completed."
+    )
