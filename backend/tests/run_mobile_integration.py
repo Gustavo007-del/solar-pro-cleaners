@@ -70,14 +70,24 @@ def run_clients(database_url: str) -> None:
                 business = BusinessProfile(business_name="Integration Test Business", timezone="Asia/Kolkata")
                 service = Service(name="Test Cleaning", slug="test-cleaning", short_description="Panel cleaning",
                                   description="Test service", benefits=["Clean panels"])
+                fixed = Service(name="Fixed Cleaning", slug="fixed-cleaning", short_description="Fixed price",
+                                description="Test fixed price", display_order=1)
+                quote = Service(name="Quote Cleaning", slug="quote-cleaning", short_description="Quote required",
+                                description="Test quotation", display_order=2)
+                unpriced = Service(name="Unpriced Cleaning", slug="unpriced-cleaning", short_description="Price pending",
+                                   description="Test unpublished pricing", display_order=3)
                 hidden = Service(name="Inactive", slug="inactive", short_description="Inactive",
                                  description="Inactive service", is_active=False)
-                db.add_all([business, service, hidden])
+                db.add_all([business, service, fixed, quote, unpriced, hidden])
                 db.flush()
-                service_id, hidden_id = str(service.id), str(hidden.id)
+                services = {name: str(row.id) for name, row in {
+                    "service": service, "fixed": fixed, "quote": quote, "unpriced": unpriced, "hidden": hidden,
+                }.items()}
                 db.add_all([
                     ServicePrice(service_id=service.id, pricing_type="per_panel", price_per_panel=Decimal("10.00"),
                                  minimum_charge=Decimal("100.00")),
+                    ServicePrice(service_id=fixed.id, pricing_type="fixed", base_price=Decimal("450.00")),
+                    ServicePrice(service_id=quote.id, pricing_type="custom_quote"),
                     ServiceArea(name="Test PIN", match_type="pin", postal_code="682001",
                                 coverage_key=coverage_key("pin", LocationFields(postal_code="682001"))),
                     BusinessClosure(business_profile_id=business.id, closure_date=closure_date),
@@ -100,7 +110,7 @@ def run_clients(database_url: str) -> None:
                 sleep(0.05)
             environment = {**os.environ, "SOLAR_TEST_FIXTURE": json.dumps({
                 "base": f"http://127.0.0.1:{listener.getsockname()[1]}/api/v1",
-                "service": service_id, "hidden": hidden_id, "serviceDate": service_date.isoformat(),
+                **services, "serviceDate": service_date.isoformat(),
                 "closureDate": closure_date.isoformat(),
             })}
             subprocess.run(["node", "--test", "tests/mobile-api.integration.cjs"], cwd=ROOT, env=environment, check=True)

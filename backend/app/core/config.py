@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = Field(default=8000, ge=1, le=65535)
     web_workers: int = Field(default=1, ge=1, le=32)
-    web_concurrency: int = Field(default=64, ge=2, le=4096)
+    web_concurrency: int = Field(default=1, ge=1, le=4096)
     graceful_shutdown_seconds: int = Field(default=30, ge=1, le=300)
     request_max_bytes: int = Field(default=65536, ge=4096, le=1048576)
 

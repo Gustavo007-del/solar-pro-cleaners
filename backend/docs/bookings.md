@@ -60,7 +60,7 @@ Customer cancellation starts with pending bookings only. Administrative transiti
 
 ## Expo integration
 
-- Keep the existing local booking experience until the mobile integration phase. A local booking UUID or reference remains a local identifier. A successful API response supplies the backend UUID and reference used for future reads and cancellation.
+- Use the server booking UUID and reference for history, details and cancellation. A UUID or reference from an older local-only app identifies only its local record.
 - Add a requested service date and ask for panel quantity when applicable. Map the formatted address to `address_line`. Map edited GPS addresses to `gps_with_manual_address`. Pass the stored address fields and coordinate pair and omit any local Maps URL, local customer snapshot, or computed price.
 - Generate one idempotency key per logical submission, such as a UUID. Retain the key with its request while a response is uncertain. Retry the same payload with the same key, including after a successful token refresh. Use a new key for a deliberately new request.
 - Load history from `/my`, then use the server booking ID for details. Prefer the returned history events for the timeline. Format money from the decimal strings and show a blank or quotation state for a null estimate. Display server and local records according to their actual origin. A local record becomes a server booking only after an explicit successful submission.
