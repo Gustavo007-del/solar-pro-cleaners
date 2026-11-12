@@ -1,6 +1,7 @@
 import re
 from collections.abc import Mapping
 
+from backend import app
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -102,31 +103,31 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     import logging
 
-logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)
 
-@app.exception_handler(SQLAlchemyError)
-async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
-    logger.exception("Database error occurred")
+    @app.exception_handler(SQLAlchemyError)
+    async def database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+        logger.exception("Database error occurred")
 
-    if isinstance(exc, IntegrityError):
+        if isinstance(exc, IntegrityError):
+            return error_response(
+                request.scope,
+                409,
+                "conflict",
+                "The request conflicts with existing data."
+            )
+
+        if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
+            return error_response(
+                request.scope,
+                503,
+                "database_unavailable",
+                "The database is temporarily unavailable."
+            )
+
         return error_response(
             request.scope,
-            409,
-            "conflict",
-            "The request conflicts with existing data."
+            500,
+            "database_error",
+            "The database operation could not be completed."
         )
-
-    if isinstance(exc, (OperationalError, DisconnectionError, TimeoutError)):
-        return error_response(
-            request.scope,
-            503,
-            "database_unavailable",
-            "The database is temporarily unavailable."
-        )
-
-    return error_response(
-        request.scope,
-        500,
-        "database_error",
-        "The database operation could not be completed."
-    )
