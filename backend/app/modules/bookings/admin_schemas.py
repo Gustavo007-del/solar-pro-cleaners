@@ -16,6 +16,7 @@ class AdminBookingQuery(BookingListQuery):
     customer_name: Text120 | None = None
     customer_phone: Text120 | None = None
     service_id: UUID | None = None
+    technician_id: UUID | None = None
     created_from: CalendarDate | None = None
     created_to: CalendarDate | None = None
     city: Text120 | None = None

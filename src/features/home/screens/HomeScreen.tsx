@@ -8,9 +8,9 @@ import { ContactSupportBanner } from '../components/ContactSupportBanner';
 import { HomeHeader } from '../components/HomeHeader';
 import { HomeHero } from '../components/HomeHero';
 import { HowItWorks } from '../components/HowItWorks';
+import { ServiceCatalogue } from '../components/ServiceCatalogue';
 import { ServiceBenefits } from '../components/ServiceBenefits';
 import { ServiceInformation } from '../components/ServiceInformation';
-import { ServiceIntroduction } from '../components/ServiceIntroduction';
 
 export function HomeScreen() {
   return (
@@ -18,8 +18,9 @@ export function HomeScreen() {
       <ScrollContainer contentContainerStyle={styles.content}>
         <Entrance variant="fade"><HomeHeader /></Entrance>
         <Entrance><HomeHero /></Entrance>
-        <Entrance variant="fade" delay={durations.sectionStagger}><ServiceIntroduction /></Entrance>
-        <Entrance variant="fade" delay={2 * durations.sectionStagger}><ServiceBenefits /></Entrance>
+        <Entrance variant="fade" delay={durations.sectionStagger}>
+          <ServiceCatalogue renderFeatured={(service) => <ServiceBenefits benefits={service.benefits} />} />
+        </Entrance>
         <Entrance variant="fade" delay={3 * durations.sectionStagger}><HowItWorks /></Entrance>
         <Entrance variant="fade" delay={3 * durations.sectionStagger}><ServiceInformation /></Entrance>
         <Entrance variant="fade" delay={3 * durations.sectionStagger}><ContactSupportBanner /></Entrance>

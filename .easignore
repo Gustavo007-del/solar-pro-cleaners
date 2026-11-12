@@ -15,4 +15,5 @@ credentials.json
 *.mobileprovision
 
 /backend/
+/admin-dashboard/
 /.git/

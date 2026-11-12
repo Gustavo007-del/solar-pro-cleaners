@@ -60,6 +60,12 @@ def _admin_card(booking: Booking, assignment: CurrentTechnician | None = None) -
 
 def list_admin_bookings(db: Session, query: AdminBookingQuery) -> AdminPage[AdminBookingCard]:
     filters = booking_filters(query, customer_id=None, service_id=query.service_id, search=query.search)
+    if query.technician_id is not None:
+        filters.append(select(BookingAssignment.id).where(
+            BookingAssignment.booking_id == Booking.id,
+            BookingAssignment.technician_id == query.technician_id,
+            BookingAssignment.assignment_status.in_(ACTIVE_ASSIGNMENTS),
+        ).correlate(Booking).exists())
     if query.customer_name:
         filters.append(Booking.customer_name_snapshot.icontains(query.customer_name, autoescape=True))
     if query.customer_phone:

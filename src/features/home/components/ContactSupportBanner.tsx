@@ -5,12 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { OutlineButton, PrimaryButton } from '@/components/buttons/Buttons';
 import { FeatureCard } from '@/components/surfaces/ContentCards';
 import { useBusinessContact } from '@/features/contact/hooks/useBusinessContact';
-import { businessContact } from '@/services/contact/businessContact';
 import { colors, spacing, typography } from '@/theme';
 
 export function ContactSupportBanner() {
   const { t } = useTranslation();
-  const { failedAction, openContact } = useBusinessContact();
+  const { businessContact, resource, failedAction, openContact } = useBusinessContact();
   const unavailable = !businessContact.phone && !businessContact.whatsapp;
 
   return (
@@ -37,7 +36,8 @@ export function ContactSupportBanner() {
               onPress={() => { void openContact('whatsapp'); }}
             />
           </View>
-          {unavailable && <Text style={[typography.supporting, styles.note]}>{t('home.support.unavailable')}</Text>}
+          {resource.loading && !resource.data && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+          {unavailable && !resource.loading && <Text style={[typography.supporting, styles.note]}>{t('home.support.unavailable')}</Text>}
           {failedAction && (
             <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>
               {t(failedAction === 'call' ? 'home.support.callError' : 'home.support.whatsappError')}

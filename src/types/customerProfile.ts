@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const maxCustomerNameLength = 100;
 export const fullNameSchema = z.string().trim()
   .min(1, 'registration.invalidName')
-  .max(maxCustomerNameLength, 'registration.nameTooLong');
+  .max(maxCustomerNameLength, 'registration.nameTooLong')
+  .regex(/^[^\x00-\x1f\x7f]+$/, 'registration.invalidName');
 export const indianMobileSchema = z.string().regex(/^\+91[6-9]\d{9}$/, 'registration.invalidMobile');
 
 export const customerProfileSchema = z.object({

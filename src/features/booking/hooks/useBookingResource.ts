@@ -1,7 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
-type Snapshot<T> = { key: string; data?: T; loading: boolean; failed: boolean };
+type Snapshot<T> = { key: string; data?: T; loading: boolean; failed: boolean; error?: unknown };
 
 export function useBookingResource<T>(key: string | undefined, read: () => Promise<T>) {
   const [snapshot, setSnapshot] = useState<Snapshot<T>>();
@@ -21,13 +21,14 @@ export function useBookingResource<T>(key: string | undefined, read: () => Promi
 
     void read().then(
       (data) => { if (active) setSnapshot({ key, data, loading: false, failed: false }); },
-      () => {
+      (error: unknown) => {
         if (active) {
           setSnapshot((previous) => ({
             key,
             data: previous?.key === key ? previous.data : undefined,
             loading: false,
             failed: true,
+            error,
           }));
         }
       },
@@ -42,6 +43,7 @@ export function useBookingResource<T>(key: string | undefined, read: () => Promi
     data: current?.data,
     loading: Boolean(key) && (current?.loading ?? true),
     failed: current?.failed ?? false,
+    error: current?.error,
     refresh,
   };
 }

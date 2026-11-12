@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-import { fullNameSchema, indianMobileSchema } from './customerProfile';
-
-export const solarCleaningService = 'solar_panel_cleaning';
 export const maxBookingInstructions = 500;
 export const maxBookingAddressPart = 120;
 export const indianPinCodePattern = /^[1-9]\d{5}$/;
@@ -34,27 +31,6 @@ const manualBookingAddressSchema = bookingAddressSchema.extend({
   landmark: z.string().trim().max(maxBookingAddressPart).nullable(),
 });
 
-const bookingLocationSchema = z.union([
-  z.object({
-    method: z.literal('gps'),
-    coordinates: locationCoordinatesSchema,
-    address: bookingAddressSchema,
-    isAddressManuallyEdited: z.literal(false),
-  }),
-  z.object({
-    method: z.literal('gps'),
-    coordinates: locationCoordinatesSchema,
-    address: manualBookingAddressSchema,
-    isAddressManuallyEdited: z.literal(true),
-  }),
-  z.object({
-    method: z.literal('manual'),
-    coordinates: z.null(),
-    address: manualBookingAddressSchema,
-    isAddressManuallyEdited: z.literal(false),
-  }),
-]);
-
 export const bookingStatuses = ['pending', 'confirmed', 'assigned', 'in_progress', 'completed', 'cancelled'] as const;
 const bookingStatusSchema = z.enum(bookingStatuses);
 
@@ -63,34 +39,43 @@ export function normalizeBookingStatus(value: unknown): BookingStatus | 'unknown
   return status.success ? status.data : 'unknown';
 }
 
-export const bookingRequestSchema = z.object({
-  customerId: z.uuid(),
-  serviceType: z.literal(solarCleaningService),
-  customerName: fullNameSchema,
-  primaryPhone: indianMobileSchema,
-  alternatePhone: indianMobileSchema.nullable(),
-  location: bookingLocationSchema,
-  additionalInstructions: z.string().trim().max(maxBookingInstructions).nullable(),
-});
-
-export const bookingSchema = bookingRequestSchema.extend({
-  id: z.uuid(),
-  reference: z.string().min(1),
-  status: bookingStatusSchema,
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
-
-export const bookingRecordSchema = bookingSchema.extend({
-  status: z.unknown().transform(normalizeBookingStatus),
-});
-
 export type LocationCoordinates = z.infer<typeof locationCoordinatesSchema>;
 export type BookingAddress = z.infer<typeof bookingAddressSchema>;
 export type ManualBookingAddress = z.infer<typeof manualBookingAddressSchema>;
-export type BookingLocation = z.infer<typeof bookingLocationSchema>;
+export type BookingLocation =
+  | { method: 'gps'; coordinates: LocationCoordinates; address: BookingAddress; isAddressManuallyEdited: boolean }
+  | { method: 'manual'; coordinates: null; address: BookingAddress; isAddressManuallyEdited: false };
 export type LocationMethod = BookingLocation['method'];
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type BookingFilter = 'all' | BookingStatus;
-export type BookingRequest = z.infer<typeof bookingRequestSchema>;
-export type Booking = z.infer<typeof bookingRecordSchema>;
+export type BookingCardData = {
+  id: string;
+  reference: string;
+  status: BookingStatus | 'unknown';
+  serviceName: string;
+  serviceDate: string;
+  estimatedAmount: string | null;
+  currency: string;
+  createdAt: string;
+  addressSummary: string;
+};
+export type Booking = BookingCardData & {
+  location: BookingLocation;
+  customerName: string;
+  primaryPhone: string;
+  alternatePhone: string | null;
+  additionalInstructions: string | null;
+  cancellationReason: string | null;
+  cancelledAt: string | null;
+  updatedAt: string;
+  coverageMatched: boolean | null;
+  pricing: {
+    pricing_type: 'fixed' | 'per_panel' | 'custom_quote' | null;
+    base_price: string | null;
+    price_per_panel: string | null;
+    minimum_charge: string | null;
+    panel_quantity: number | null;
+    currency: string;
+  };
+  history: { status: BookingStatus | 'unknown'; createdAt: string }[];
+};

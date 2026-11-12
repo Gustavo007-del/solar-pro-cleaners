@@ -1,4 +1,63 @@
 {
+  "integration": {
+    "signIn": "Sign in on this device",
+    "signInHelp": "Use this device’s saved installation to access your account.",
+    "logout": "Sign out",
+    "logoutAll": "Sign out on all devices",
+    "logoutConfirm": "End the selected sessions?",
+    "network": "Could not reach the service. Check your connection and try again.",
+    "timeout": "The request timed out. Try again.",
+    "server": "The service is temporarily unavailable. Try again shortly.",
+    "invalid": "The service returned an unexpected response.",
+    "session": "Your session has ended. Sign in again to continue.",
+    "rate": "Too many requests. Wait a moment and try again.",
+    "configuration": "The service address is missing. Contact support.",
+    "services": "Services",
+    "noServices": "No services are currently available.",
+    "viewService": "View service",
+    "requestedDate": "Requested date (YYYY-MM-DD)",
+    "dateHint": "The business will confirm your requested date.",
+    "panelQuantity": "Number of panels",
+    "price": "Price",
+    "estimate": "Booking estimate",
+    "perPanel": "{{amount}} per panel",
+    "minimum": "Minimum charge {{amount}}",
+    "quote": "Quote required",
+    "priceUnknown": "Price to be confirmed",
+    "availability": "Check availability",
+    "dateRequired": "Enter a valid service date.",
+    "locationRequired": "Confirm an address before checking availability.",
+    "coverageManual": "The business needs to confirm this address.",
+    "coverageMatched": "Service area matched",
+    "savedAddresses": "Saved addresses",
+    "noAddresses": "No saved addresses yet.",
+    "addAddress": "Add address",
+    "editAddress": "Edit address",
+    "setDefault": "Set as default",
+    "defaultAddress": "Default address",
+    "deleteAddress": "Delete address",
+    "deleteAddressConfirm": "Remove this saved address?",
+    "useAddress": "Use this address",
+    "useNewAddress": "Use a new address",
+    "saveAddress": "Save this address",
+    "loadMore": "Load more",
+    "cancel": "Cancel booking",
+    "cancelConfirm": "Cancel this booking request?",
+    "keep": "Keep booking",
+    "cancelledAt": "Cancelled on",
+    "statusHistory": "Status history",
+    "areas": "Service areas",
+    "noAreas": "No service areas are published.",
+    "hours": "Operating hours",
+    "closures": "Upcoming closures",
+    "closed": "Closed",
+    "accountActive": "Active",
+    "accountInactive": "Inactive",
+    "accountStatus": "Account status",
+    "registered": "Registered on",
+    "legacyData": "Local records from older versions are separate from server bookings.",
+    "retrySameBooking": "Retry the same submission if the outcome is unknown. Check My Bookings before creating another request."
+  },
   "brand": {
     "descriptor": "Solar panel cleaning and maintenance",
     "tagline": "Clean Panels. Better Energy."
@@ -108,7 +167,7 @@
       },
       "storage": {
         "title": "Data Storage",
-        "body": "This version stores profiles, language preferences, and booking requests on the device. Booking submission creates a local record. The business will define its storage and retention policy before connecting a backend."
+        "body": "Language and onboarding preferences are stored on this device. Installation credentials and session tokens are kept in encrypted device storage. The service stores your account, saved addresses and submitted bookings on its servers."
       },
       "sharing": {
         "title": "Information Sharing",
@@ -116,7 +175,7 @@
       },
       "security": {
         "title": "Data Security",
-        "body": "Local data is subject to your device’s security and backup settings. The business will define and document safeguards for any future server-side processing."
+        "body": "The app sends account and booking information over HTTPS in deployed environments. Access to records depends on an authenticated session and the service’s access controls."
       },
       "rights": {
         "title": "Customer Rights",
@@ -124,7 +183,7 @@
       },
       "deletion": {
         "title": "Account Deletion",
-        "body": "The Delete Account screen explains the consequences and asks for confirmation. This version cannot send a deletion request. The business must approve a deletion and retention policy before connecting that service."
+        "body": "Use the Delete Account screen to find the business’s request page or support contact. The app does not delete service records automatically."
       },
       "contact": {
         "title": "Contact Information",
@@ -144,7 +203,7 @@
       },
       "requests": {
         "title": "Booking Requests",
-        "body": "Submitting a request in this version records it on the device with a pending status. Keep the booking reference if you need assistance."
+        "body": "Submitting a request sends it to the service with a pending status. Keep the booking reference if you need assistance."
       },
       "confirmation": {
         "title": "Booking Confirmation",
@@ -350,7 +409,7 @@
     "submitError": "We couldn’t save your booking. Your details are still here. Please try again.",
     "success": {
       "title": "Booking Request Saved",
-      "description": "Your solar panel cleaning request is saved on this device. Keep the booking reference if you contact the business.",
+      "description": "Your solar panel cleaning request was submitted to the service. Keep the booking reference if you contact the business.",
       "reference": "Booking Reference",
       "myBookings": "View My Bookings",
       "home": "Back to Home",
@@ -368,7 +427,7 @@
       "unknown": "Status Unavailable"
     },
     "statusDescription": {
-      "pending": "This request is saved on this device with Pending status.",
+      "pending": "The service received your request. It is awaiting confirmation.",
       "confirmed": "The business has confirmed your service request.",
       "assigned": "A technician has been assigned to your service request.",
       "in_progress": "Your solar panel cleaning service is in progress.",
@@ -502,14 +561,14 @@
     "warning": "Deletion Warning",
     "consequences": "Account deletion can remove access to your profile and booking history. Once the business completes deletion, it may be irreversible.",
     "retention": "The business’s final retention policy will determine what is deleted or scheduled for deletion. Some records may need to be kept for legal or legitimate business reasons.",
-    "availability": "Account deletion requires a backend connection that is unavailable in this version. This screen prepares the confirmation and leaves your local data in place.",
+    "availability": "Use the published request page or contact the business for help with account deletion.",
     "acknowledge": "I understand that account deletion may remove access to my profile and booking history.",
     "confirm": "Confirm Deletion",
     "review": "You’ve acknowledged the consequences. Confirm to check whether this version can send your request.",
     "outcome": {
       "unavailable": {
         "title": "Account Deletion Unavailable",
-        "description": "This version cannot send an account deletion request. Your profile and bookings are still saved on this device."
+        "description": "The app could not submit a deletion request directly. Use the published request page or contact the business."
       },
       "submitted": {
         "title": "Deletion Request Submitted",

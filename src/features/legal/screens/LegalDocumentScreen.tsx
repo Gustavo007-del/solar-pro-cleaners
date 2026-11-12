@@ -8,6 +8,7 @@ import { AppHeader, SectionHeader } from '@/components/layout/Headers';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { appRoutes } from '@/constants/routes';
 import { useApplication } from '@/providers/ApplicationProvider';
+import { useBusinessContact } from '@/features/contact/hooks/useBusinessContact';
 import { businessContact } from '@/services/contact/businessContact';
 import { colors, spacing, typography } from '@/theme';
 import { backOrReplace } from '@/utils/navigation';
@@ -17,11 +18,12 @@ import { legalDocuments } from '../content/documents';
 export function LegalDocumentScreen({ document }: { document: keyof typeof legalDocuments }) {
   const { t } = useTranslation();
   const { phase } = useApplication();
+  const { businessContact: current } = useBusinessContact();
   const { title, sections } = legalDocuments[document];
   const publishedUrl = document === 'privacy' ? businessContact.privacyUrl : document === 'terms' ? businessContact.termsUrl : undefined;
   const fallback = phase === 'registration' ? appRoutes.registration : appRoutes.settings;
   const contactRows = (['legalName', 'phone', 'email'] as const).flatMap((key) => {
-    const value = businessContact[key];
+    const value = key === 'legalName' ? businessContact.legalName : current[key];
     return value ? [{ label: t(`contact.business.${key}`), value }] : [];
   });
 
@@ -44,7 +46,7 @@ export function LegalDocumentScreen({ document }: { document: keyof typeof legal
               {section === 'contact' && (
                 <>
                   {contactRows.length > 0 && <DetailRows rows={contactRows} />}
-                  {businessContact.website && <WebLinkButton label={t('contact.business.website')} url={businessContact.website} />}
+                  {current.website && <WebLinkButton label={t('contact.business.website')} url={current.website} />}
                 </>
               )}
             </View>

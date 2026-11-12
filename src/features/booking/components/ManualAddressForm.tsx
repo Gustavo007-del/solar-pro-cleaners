@@ -19,9 +19,10 @@ type Props = {
   onChange: (field: keyof ManualAddressInput, value: string) => void;
   onSave: (address: ManualBookingAddress) => void;
   onCancel: () => void;
+  disabled?: boolean;
 };
 
-export function ManualAddressForm({ defaults, onChange, onSave, onCancel }: Props) {
+export function ManualAddressForm({ defaults, onChange, onSave, onCancel, disabled }: Props) {
   const { t } = useTranslation();
   const inputs = useRef<Partial<Record<keyof ManualAddressInput, TextInput>>>({});
   const { control, handleSubmit } = useForm<ManualAddressInput>({
@@ -60,6 +61,7 @@ export function ManualAddressForm({ defaults, onChange, onSave, onCancel }: Prop
               }}
               label={t(`booking.address.${name}`)}
               value={field.value}
+              editable={!disabled}
               autoCapitalize={name === 'pinCode' ? 'none' : 'words'}
               keyboardType={name === 'pinCode' ? 'number-pad' : 'default'}
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
@@ -77,8 +79,8 @@ export function ManualAddressForm({ defaults, onChange, onSave, onCancel }: Prop
         />
       ))}
       <View style={styles.actions}>
-        <SecondaryButton label={t('booking.address.save')} onPress={() => { void submit(); }} />
-        <TextButton label={t('common.cancel')} onPress={onCancel} />
+        <SecondaryButton label={t('booking.address.save')} disabled={disabled} onPress={() => { void submit(); }} />
+        <TextButton label={t('common.cancel')} disabled={disabled} onPress={onCancel} />
       </View>
     </View>
   );

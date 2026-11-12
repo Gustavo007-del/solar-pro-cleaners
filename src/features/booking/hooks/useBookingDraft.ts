@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 
 import type { CapturedLocation } from '@/services/location/currentLocation';
+import { fromAddress, type SavedAddress } from '@/services/api/addresses';
+import type { CreateBookingInput } from '@/services/bookings/bookingService';
 import type { BookingLocation, ManualBookingAddress } from '@/types/booking';
 
 import type { ManualAddressInput } from '../schemas/addressSchema';
@@ -14,13 +16,22 @@ type BookingDraft = {
   detailsConfirmed: boolean;
   confirmedProfileVersion?: string;
   instructions: string;
-  submissionId?: string;
+  serviceId?: string;
+  serviceDate?: string;
+  panelQuantity?: string;
+  savedAddress?: SavedAddress;
+  submission?: { id: string; request: CreateBookingInput };
 };
 
 const sessionDrafts = new Map<string, BookingDraft>();
 
+export function clearBookingDraft(customerId: string) {
+  sessionDrafts.delete(customerId);
+}
+
 export function getSelectedLocation(draft: BookingDraft): BookingLocation | null {
   if (draft.editingAddress) return null;
+  if (draft.savedAddress) return fromAddress(draft.savedAddress);
   const { captured, manualAddress } = draft;
 
   if (captured && manualAddress) {

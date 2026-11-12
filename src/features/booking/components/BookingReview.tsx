@@ -13,8 +13,10 @@ import type { CustomerProfile } from '@/types/customerProfile';
 import { formatCoordinates } from '../utils/coordinates';
 import { DetailRows } from '@/components/layout/DetailRows';
 
-export function BookingReview({ profile, location, instructions, checked, disabled, onCheck }: {
+export function BookingReview({ profile, serviceName, serviceDate, location, instructions, checked, disabled, onCheck }: {
   profile: CustomerProfile;
+  serviceName?: string;
+  serviceDate: string;
   location: BookingLocation | null;
   instructions: string;
   checked: boolean;
@@ -23,7 +25,8 @@ export function BookingReview({ profile, location, instructions, checked, disabl
 }) {
   const { t } = useTranslation();
   const rows = [
-    { label: t('booking.summary.service'), value: t('booking.service.name') },
+    ...(serviceName ? [{ label: t('booking.summary.service'), value: serviceName }] : []),
+    ...(serviceDate ? [{ label: t('integration.requestedDate'), value: serviceDate }] : []),
     { label: t('booking.customer.name'), value: profile.fullName },
     { label: t('booking.customer.primaryPhone'), value: profile.primaryPhone },
   ];

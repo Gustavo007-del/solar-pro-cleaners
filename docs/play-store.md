@@ -8,7 +8,7 @@ The copy below describes the current on-device experience. Supply final business
 | --- | --- |
 | App name, up to 30 characters | Solar Care, provisional |
 | Short description, up to 80 characters | Prepare solar panel cleaning requests and view saved bookings. |
-| Full description, up to 4,000 characters | Solar Care helps customers prepare a solar panel cleaning request. Choose GPS or enter the installation address, add access instructions, and review the booking details. The current app saves your requests and profile on the device. Browse saved bookings, update your contact details, and use configured support channels. English and Malayalam are available. |
+| Full description, up to 4,000 characters | Solar Care helps customers request solar panel cleaning. Choose GPS or enter the installation address, add access instructions, and review the booking details. Track requests, update your contact details, and contact the business for help. English and Malayalam are available. |
 | Category | Confirm the appropriate app category with the business |
 | Support email | Business to supply |
 | Website | Business to supply |
@@ -30,17 +30,17 @@ Place final files under `assets/store/`. Capture screenshots from the genuine re
 
 ## Data Safety reference
 
-Use this inventory when completing the form for the shipped binary and its backend. The current code persists application records with AsyncStorage. The entries below describe app behavior. Google Play classifications depend on the final data transfers, purposes, recipients, SDK behavior, and any applicable exceptions. [Google Play Data Safety guidance](https://support.google.com/googleplay/android-developer/answer/10787469)
+Use this inventory when completing the form for the shipped binary and its backend. The entries below describe app behavior. Google Play classifications depend on the final data transfers, purposes, recipients, SDK behavior, and any applicable exceptions. [Google Play Data Safety guidance](https://support.google.com/googleplay/android-developer/answer/10787469)
 
 | Data | Current behavior | Production disclosure inputs |
 | --- | --- | --- |
-| Name, customer ID, primary and optional alternate phone | Saved locally with the profile and copied into the booking where required | Account creation and contact data sent to the backend, purposes, retention, and recipients |
-| Service address and optional GPS coordinates | Manual address works without location permission. One-time foreground capture and platform reverse geocoding occur when chosen. The Maps action opens an external URL containing coordinates | Approximate or precise location sent by the final app, geocoder behavior, business recipients, and retention |
-| Booking status, reference, timestamps, and user instructions | Saved locally and shown in booking history | Data collected by the final booking backend, operational access, and handling of optional free text |
+| Name, customer ID, primary and optional alternate phone | FastAPI stores the account and snapshots contact details on booking submission | Account and contact data, purposes, retention, and recipients |
+| Service address and optional GPS coordinates | FastAPI receives the address during coverage checks, address saves and booking submissions. Foreground location and reverse geocoding run when chosen. Maps receives coordinates when opened | Location precision, geocoder behavior, business recipients, and retention |
+| Booking status, reference, timestamps, and user instructions | Stored in PostgreSQL and displayed in booking history | Operational access, handling of optional free text, and retention |
 | Language choice and onboarding completion | Saved locally to maintain app preferences | Any final preference synchronization or analytics use |
 | Phone, WhatsApp, website, and legal links | Open a user-selected system or external service. The app passes the configured destination number or URL | Final destinations and any information passed to external providers |
 
-Expo Location uses the operating system's location and geocoding facilities. AsyncStorage persists records on-device. Expo Crypto generates local identifiers. React Native, Expo Router, Reanimated, Gesture Handler, NativeWind, Lucide, and localization and form libraries support app behavior. The release configuration also includes Expo's splash, system UI, and navigation bar modules, with Expo development tooling for development builds. The final declaration must account for the SDK versions and actual data flows in the shipped binary, including any later backend, monitoring, or analytics integration.
+Expo Location uses the operating system's location and geocoding facilities. AsyncStorage persists language and onboarding. SecureStore stores the installation credential and rotating tokens. Expo Crypto generates credentials and booking retry identifiers. The final declaration should reflect the SDK versions and actual data flows in the shipped binary.
 
 ## Privacy and account deletion
 

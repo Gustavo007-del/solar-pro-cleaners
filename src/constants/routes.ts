@@ -3,6 +3,8 @@ export const appRoutes = {
   bookingDetails: '/booking/[bookingId]',
   bookingSuccess: '/booking/success/[bookingId]',
   home: '/(main)/home',
+  serviceDetails: '/services/[serviceId]',
+  savedAddresses: '/settings/addresses',
   myBookings: '/(main)/my-bookings',
   profile: '/(main)/profile',
   registration: '/profile-setup',

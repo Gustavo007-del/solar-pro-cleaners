@@ -95,6 +95,8 @@ function RootNavigator() {
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/edit-profile" />
         <Stack.Screen name="settings/account" />
+        <Stack.Screen name="settings/addresses" />
+        <Stack.Screen name="services/[serviceId]" />
         <Stack.Screen name="settings/data-usage" />
         <Stack.Screen name="settings/delete-account" />
       </Stack.Protected>

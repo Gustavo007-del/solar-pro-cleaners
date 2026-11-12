@@ -6,5 +6,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "*.ts", ".expo/types/**/*.ts"]
+  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "*.ts", ".expo/types/**/*.ts", "nativewind-env.d.ts"]
 }

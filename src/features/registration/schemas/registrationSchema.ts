@@ -7,7 +7,10 @@ function normalizeMobile(value: string) {
     .replace(/[൦-൯]/g, (digit) => String(digit.charCodeAt(0) - '൦'.charCodeAt(0)))
     .replace(/[\s()-]/g, '');
 
-  return digits.startsWith('+') ? digits : `+91${digits}`;
+  if (digits.startsWith('+')) return digits;
+  if (digits.length === 14 && digits.startsWith('0091')) return `+${digits.slice(2)}`;
+  if (digits.length === 12 && digits.startsWith('91')) return `+${digits}`;
+  return `+91${digits}`;
 }
 
 const primaryMobile = z.string().trim()

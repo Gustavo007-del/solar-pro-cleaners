@@ -12,18 +12,22 @@ import { LoadingIndicator } from '@/components/motion/LoadingIndicator';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { appRoutes } from '@/constants/routes';
 import { useApplication } from '@/providers/ApplicationProvider';
-import { bookingService } from '@/services/bookings/bookingService';
+import { bookingService, readBookingReceipt } from '@/services/bookings/bookingService';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
 import type { Booking } from '@/types/booking';
 
 import { DetailRows } from '@/components/layout/DetailRows';
+import { displayAmount } from '../utils/bookingPrice';
+import { formatBookingDate } from '../utils/bookingDate';
 import { BookingStatusBadge } from '../components/BookingStatusBadge';
 
-type Receipt = { customerId: string; bookingId: string; booking?: Booking; failed?: boolean };
+type Receipt = { customerId: string; bookingId: string; booking?: Booking; error?: unknown };
 
 export function BookingSuccessScreen() {
   const { t } = useTranslation();
   const { profile } = useApplication();
+  const message = useApiMessage();
   const { bookingId } = useLocalSearchParams<{ bookingId?: string }>();
   const customerId = profile?.customerId;
   const [receipt, setReceipt] = useState<Receipt>();
@@ -33,10 +37,15 @@ export function BookingSuccessScreen() {
     if (!customerId || !bookingId) return;
     let active = true;
     const scope = { customerId, bookingId };
+    const cached = readBookingReceipt(customerId, bookingId);
+    if (cached) {
+      setReceipt({ ...scope, booking: cached });
+      return;
+    }
 
-    void bookingService.getBookingById(customerId, bookingId).then(
+    void bookingService.getBookingById(bookingId).then(
       (booking) => { if (active) setReceipt({ ...scope, booking }); },
-      () => { if (active) setReceipt({ ...scope, failed: true }); },
+      (error: unknown) => { if (active) setReceipt({ ...scope, error }); },
     );
 
     return () => { active = false; };
@@ -55,8 +64,9 @@ export function BookingSuccessScreen() {
           </View>
         ) : (
           <AppCard>
-            <SectionHeader title={t('booking.success.unavailable')} subtitle={t(result?.failed ? 'booking.success.readError' : 'booking.success.notFound')} />
-            {result?.failed && (
+            <SectionHeader title={t('booking.success.unavailable')} subtitle={result?.error != null
+              ? message(result.error, t('booking.success.readError')) : t('booking.success.notFound')} />
+            {result?.error != null && (
               <PrimaryButton label={t('common.retry')} onPress={() => { setReceipt(undefined); setAttempt((value) => value + 1); }} />
             )}
             <OutlineButton label={t('booking.success.home')} onPress={() => router.dismissTo(appRoutes.home)} />
@@ -68,7 +78,7 @@ export function BookingSuccessScreen() {
 }
 
 function BookingReceipt({ booking }: { booking: Booking }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return (
     <>
@@ -83,10 +93,14 @@ function BookingReceipt({ booking }: { booking: Booking }) {
           <SectionHeader title={t('booking.success.reference')} />
           <Text selectable style={[typography.section, styles.reference]}>{booking.reference}</Text>
           <DetailRows rows={[
-            { label: t('booking.summary.service'), value: t('booking.service.name') },
+            { label: t('booking.summary.service'), value: booking.serviceName },
+            { label: t('integration.requestedDate'), value: formatBookingDate(booking.serviceDate, i18n.resolvedLanguage) },
+            { label: t('integration.estimate'), value: booking.estimatedAmount !== null
+              ? displayAmount(booking.estimatedAmount, booking.currency) : t('integration.priceUnknown') },
             { label: t('booking.summary.address'), value: booking.location.address.formattedAddress },
           ]} />
           <BookingStatusBadge status={booking.status} />
+          {booking.coverageMatched !== true && <Text style={typography.supporting}>{t('integration.coverageManual')}</Text>}
         </AppCard>
       </Entrance>
 

@@ -14,6 +14,7 @@ export function getPublicApiBaseUrl(value?: string) {
     const url = new URL(raw);
     const allowed = url.protocol === 'https:' || (appEnvironment === 'development' && url.protocol === 'http:');
     if (!allowed || !url.hostname || url.username || url.password || url.search || url.hash) return undefined;
+    if (appEnvironment !== 'development' && /^(localhost(?:\..*)?|127\..*|\[::1\]|0\.0\.0\.0)$/i.test(url.hostname)) return undefined;
     return url.href.replace(/\/+$/, '');
   } catch {
     return undefined;

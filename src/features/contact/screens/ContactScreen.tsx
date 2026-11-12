@@ -12,16 +12,18 @@ import { Entrance } from '@/components/motion/Entrance';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { InfoCard } from '@/components/surfaces/ContentCards';
 import { appRoutes } from '@/constants/routes';
-import { businessContact } from '@/services/contact/businessContact';
 import { colors, spacing, typography } from '@/theme';
 
+import { BusinessSchedule } from '../components/BusinessSchedule';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { useBusinessContact } from '../hooks/useBusinessContact';
 
-const information = ['name', 'phone', 'whatsapp', 'email', 'address', 'hours'] as const;
+const information = ['name', 'phone', 'whatsapp', 'email', 'address'] as const;
 
 export function ContactScreen() {
   const { t } = useTranslation();
-  const { failedAction, openContact } = useBusinessContact();
+  const { businessContact, resource, failedAction, openContact } = useBusinessContact();
+  const message = useApiMessage();
   const rows = information.flatMap((field) => {
     const value = businessContact[field];
     return value ? [{ label: t(`contact.business.${field}`), value }] : [];
@@ -58,10 +60,16 @@ export function ContactScreen() {
         } />
         <AppCard>
           <SectionHeader title={t('contact.business.title')} />
+          {resource.loading && !resource.data && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+          {resource.failed && <>
+            <Text style={styles.error}>{message(resource.error, t('home.support.unavailable'))}</Text>
+            <TextButton label={t('common.retry')} onPress={resource.refresh} />
+          </>}
           {rows.length > 0 && <DetailRows rows={rows} />}
           {!rows.length && !businessContact.website && <Text style={[typography.supporting, styles.description]}>{t('home.support.unavailable')}</Text>}
           {businessContact.website && <WebLinkButton label={t('contact.business.website')} url={businessContact.website} />}
         </AppCard>
+        <BusinessSchedule />
       </ScrollContainer>
     </ScreenContainer>
   );

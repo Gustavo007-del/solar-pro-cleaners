@@ -9,7 +9,7 @@ import { appRoutes } from '@/constants/routes';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
 
-function getGreetingPeriod() {
+function getGreetingPeriod(): 'morning' | 'afternoon' | 'evening' {
   const hour = new Date().getHours();
   if (hour < 12) return 'morning';
   if (hour < 17) return 'afternoon';

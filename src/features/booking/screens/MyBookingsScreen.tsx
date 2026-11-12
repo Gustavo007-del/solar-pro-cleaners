@@ -1,22 +1,24 @@
 import { router } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { TextButton } from '@/components/buttons/Buttons';
+import { usePagedResource } from '@/hooks/usePagedResource';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { ScreenContainer } from '@/components/layout/Containers';
 import { appRoutes } from '@/constants/routes';
 import { useApplication } from '@/providers/ApplicationProvider';
-import { bookingService, getBookingsByStatus, getBookingStatistics } from '@/services/bookings/bookingService';
+import { bookingService } from '@/services/bookings/bookingService';
 import { colors, sizes, spacing, typography } from '@/theme';
-import type { Booking, BookingFilter } from '@/types/booking';
+import type { BookingCardData, BookingFilter } from '@/types/booking';
 
 import { BookingCard } from '../components/BookingCard';
 import { BookingEmptyState, BookingErrorState, BookingLoadingState } from '../components/BookingFeedback';
 import { BookingFilters } from '../components/BookingFilters';
 import { BookingStatusSummary } from '../components/BookingStatusSummary';
-import { useBookingResource } from '../hooks/useBookingResource';
 
-const emptyBookings: readonly Booking[] = [];
+type BookingPage = Awaited<ReturnType<typeof bookingService.list>>;
 
 export function MyBookingsScreen() {
   const { profile } = useApplication();
@@ -26,16 +28,17 @@ export function MyBookingsScreen() {
 function BookingHistory({ customerId }: { customerId?: string }) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<BookingFilter>('all');
-  const read = useCallback(() => customerId ? bookingService.getCustomerBookings(customerId) : Promise.resolve(emptyBookings), [customerId]);
-  const { data, loading, failed, refresh } = useBookingResource(customerId, read);
-  const bookings = data ?? emptyBookings;
-  const counts = useMemo(() => getBookingStatistics(bookings), [bookings]);
-  const filtered = useMemo(() => getBookingsByStatus(bookings, filter), [bookings, filter]);
+  const read = useCallback((page: number) => bookingService.list(filter, page), [filter]);
+  const { data, error, loading, more, refresh, loadMore } = usePagedResource<BookingCardData, BookingPage>(read);
+  const message = useApiMessage();
+  const statuses = data?.first.status_counts;
+  const counts = statuses ? { total: Object.values(statuses).reduce((sum, value) => sum + value, 0),
+    pending: statuses.pending, confirmed: statuses.confirmed, completed: statuses.completed } : undefined;
 
   return (
     <ScreenContainer edges={['top', 'left', 'right']}>
       <FlatList
-        data={filtered}
+        data={data?.items ?? []}
         keyExtractor={(booking) => booking.id}
         contentContainerStyle={styles.content}
         ItemSeparatorComponent={BookingGap}
@@ -47,22 +50,22 @@ function BookingHistory({ customerId }: { customerId?: string }) {
               <Text accessibilityRole="header" style={[typography.heading, styles.title]}>{t('nav.bookings')}</Text>
               <Text style={[typography.supporting, styles.description]}>{t('booking.history.description')}</Text>
             </View>
-            {data && (
+            {(data || filter !== 'all') && (
               <>
-                <BookingStatusSummary counts={counts} />
+                {counts && <BookingStatusSummary counts={counts} />}
                 <BookingFilters selected={filter} onChange={setFilter} />
               </>
             )}
-            {failed && data && (
-              <BookingErrorState title={t('booking.history.readErrorTitle')} description={t('booking.history.refreshError')} onRetry={refresh} />
+            {error != null && data && (
+              <BookingErrorState title={t('booking.history.readErrorTitle')} description={message(error, t('booking.history.refreshError'))} onRetry={loadMore} />
             )}
           </View>
         }
         ListEmptyComponent={
           !customerId ? (
             <BookingErrorState title={t('booking.history.readErrorTitle')} description={t('booking.history.profileMissing')} />
-          ) : failed ? (
-            data ? null : <BookingErrorState title={t('booking.history.readErrorTitle')} description={t('booking.history.readError')} onRetry={refresh} />
+          ) : error != null ? (
+            data ? null : <BookingErrorState title={t('booking.history.readErrorTitle')} description={message(error, t('booking.history.readError'))} onRetry={refresh} />
           ) : loading && !data ? (
             <BookingLoadingState />
           ) : (
@@ -73,6 +76,8 @@ function BookingHistory({ customerId }: { customerId?: string }) {
             />
           )
         }
+        ListFooterComponent={data?.hasNext ? <TextButton label={t('integration.loadMore')} disabled={more}
+          onPress={() => { void loadMore(); }} /> : undefined}
         renderItem={({ item }) => (
           <BookingCard booking={item} onPress={() => router.push({ pathname: appRoutes.bookingDetails, params: { bookingId: item.id } })} />
         )}

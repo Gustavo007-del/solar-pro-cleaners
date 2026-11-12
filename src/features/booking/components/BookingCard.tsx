@@ -6,16 +6,14 @@ import { Divider } from '@/components/layout/Containers';
 import { Entrance } from '@/components/motion/Entrance';
 import { AppCard } from '@/components/surfaces/AppCard';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
-import type { Booking } from '@/types/booking';
+import type { BookingCardData } from '@/types/booking';
 
+import { displayAmount } from '../utils/bookingPrice';
 import { formatBookingDate } from '../utils/bookingDate';
 import { BookingStatusBadge } from './BookingStatusBadge';
 
-export function BookingCard({ booking, onPress }: { booking: Booking; onPress: () => void }) {
+export function BookingCard({ booking, onPress }: { booking: BookingCardData; onPress: () => void }) {
   const { t, i18n } = useTranslation();
-  const address = booking.location.address;
-  const area = [...new Set([address.locality, address.city].filter(Boolean))].join(', ');
-  const shortAddress = address.houseName || area || address.formattedAddress;
 
   return (
     <Entrance variant="fade">
@@ -24,16 +22,21 @@ export function BookingCard({ booking, onPress }: { booking: Booking; onPress: (
           <View style={styles.icon}><SolarPanel color={colors.deep} size={sizes.icon.md} /></View>
           <View style={styles.copy}>
             <Text style={[typography.label, styles.reference]}>{booking.reference}</Text>
-            <Text style={[typography.section, styles.title]}>{t('booking.service.name')}</Text>
-            <Text style={[typography.metadata, styles.muted]}>{formatBookingDate(booking.createdAt, i18n.resolvedLanguage)}</Text>
+            <Text style={[typography.section, styles.title]}>{booking.serviceName}</Text>
+            <Text style={[typography.metadata, styles.muted]}>{formatBookingDate(booking.serviceDate, i18n.resolvedLanguage)}</Text>
+            <Text style={[typography.metadata, styles.muted]}>
+              {t('booking.details.submittedAt')} · {formatBookingDate(booking.createdAt, i18n.resolvedLanguage)}
+            </Text>
           </View>
         </View>
         <BookingStatusBadge status={booking.status} animated={false} />
         <View style={styles.address}>
           <MapPin color={colors.muted} size={sizes.icon.sm} />
           <View style={styles.copy}>
-            <Text numberOfLines={2} style={[typography.supporting, styles.title]}>{shortAddress}</Text>
-            {!!area && area !== shortAddress && <Text numberOfLines={2} style={[typography.metadata, styles.muted]}>{area}</Text>}
+            <Text numberOfLines={2} style={[typography.supporting, styles.title]}>{booking.addressSummary}</Text>
+            {booking.estimatedAmount !== null && <Text style={[typography.metadata, styles.muted]}>
+              {displayAmount(booking.estimatedAmount, booking.currency)}
+            </Text>}
           </View>
         </View>
         <Divider />

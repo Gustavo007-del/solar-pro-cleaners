@@ -1,11 +1,4 @@
-import { CalendarDays, Headset, MapPin, Smartphone, SolarPanel, Sparkles } from 'lucide-react-native';
-
-export const serviceBenefits = [
-  { id: 'cleaning', icon: Sparkles },
-  { id: 'booking', icon: Smartphone },
-  { id: 'location', icon: MapPin },
-  { id: 'assistance', icon: Headset },
-] as const;
+import { CalendarDays, MapPin, SolarPanel } from 'lucide-react-native';
 
 export const serviceSteps = [
   { id: 'book', icon: CalendarDays },
@@ -13,4 +6,4 @@ export const serviceSteps = [
   { id: 'service', icon: SolarPanel },
 ] as const;
 
-export const serviceInformation = ['service', 'availability', 'booking', 'coordination'] as const;
+export const serviceInformation = ['availability', 'booking', 'coordination'] as const;

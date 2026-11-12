@@ -1,6 +1,6 @@
 # Android release preparation
 
-The current app stores profiles and booking requests on the device. The production build profile prepares an Android App Bundle. Customer authentication, business-side booking delivery, and server-side deletion depend on future backend integration.
+The app uses FastAPI for customer accounts, business information and booking delivery. The production build profile prepares an Android App Bundle. Use a fresh development or preview build after adding SecureStore.
 
 ## App identity and assets
 
@@ -10,12 +10,12 @@ The current app stores profiles and booking requests on the device. The producti
 | Slug, deep-link scheme, app version | `src/constants/metadata.json` |
 | Android application ID | `ANDROID_APPLICATION_ID` overrides the provisional `com.solarcare.app` |
 | Initial Android version code and iOS build number | `src/constants/metadata.json`. EAS manages subsequent production build numbers remotely |
-| Expo project | Business-owned `EXPO_OWNER` and `EAS_PROJECT_ID` |
+| Expo project | Defaults to `@shijil.py/solar-care` in `app.config.ts`. Override with `EXPO_OWNER` and `EAS_PROJECT_ID` to link another project. |
 | Launcher and splash images | `assets/branding/`, referenced from the branding metadata |
 
 The solar mark is provisional. Replace it with approved artwork at the same asset paths. Use a full-bleed 1024 × 1024 PNG for the main icon and adaptive background. Keep the adaptive foreground and monochrome layers transparent, with the mark inside Android's safe region. Use a transparent splash PNG. The native launch screen and in-app splash use the same mark. [Expo app icons](https://docs.expo.dev/develop/user-interface/app-icons/) · [Expo splash screen](https://docs.expo.dev/versions/v55.0.0/sdk/splash-screen/)
 
-The production ID becomes the Play Store package identity. Development and preview append `.development` or `.preview` and use separate deep-link schemes. The resulting apps have separate Android storage, so their profiles and bookings are isolated from the production app.
+The production ID becomes the Play Store package identity. Development and preview append `.development` or `.preview` and use separate deep-link schemes. Each variant stores its session separately on Android. Server data is stored by the configured backend.
 
 ## Environment and builds
 
@@ -37,8 +37,12 @@ Android uses edge-to-edge system bars, safe-area insets, and keyboard resize. Th
 - Business display and legal names, support email, phone, WhatsApp number if separate, and any published address, working hours, or website.
 - Approved privacy policy and terms. Supply the corresponding public HTTPS URLs when published.
 - A functional public deletion request page when required for the final account model. `EXPO_PUBLIC_ACCOUNT_DELETION_URL` exposes that link from the in-app deletion flow once provided. Opening the link delegates the request to the published page.
-- A public FastAPI HTTPS base URL when the backend is available. The centralized API configuration accepts local HTTP addresses only in development. The app continues using its existing local services.
+- A reachable public FastAPI HTTPS base URL including `/api/v1`. Preview and production currently use the Render API. Set the preview profile's `EXPO_PUBLIC_API_BASE_URL` to a separate HTTPS API for testing against a test database. Development can use a local HTTP address.
 
-The profile and booking repositories are the integration points for authenticated FastAPI requests. A future server must enforce customer ownership, deduplicate booking submissions, and implement approved retention and deletion handling. Keep Supabase access and privileged operations on the server. The app currently reports deletion as unavailable and retains local records. Keep errors customer-facing and exclude customer names, phone numbers, addresses, coordinates, and instructions from diagnostic logs.
+Verify the backend's liveness, readiness and active catalogue before building. The backend enforces customer ownership and deduplicates booking submissions. Keep Supabase access and privileged operations on the server. The app links to the configured deletion request page or public support. Keep customer information and credentials out of diagnostic logs.
+
+## Device verification
+
+Use a development or preview build connected to a test database. Register a customer, restart the app and confirm that the same account opens. Deny foreground location once and complete a manual address, then grant permission and verify GPS capture, edited GPS addresses, and Maps. Save, edit, set a default, and remove a test address. Submit a booking and confirm that the receipt, date, price and reference match the history entry. Interrupt a submission and retry the same request to verify that it appears once. Cancel a pending booking, check the resulting timeline, update the profile, and test both sign-out actions. Turn off connectivity during a read and a form submission to check the retry state and retained form values.
 
 [Play listing and Data Safety preparation](./play-store.md)

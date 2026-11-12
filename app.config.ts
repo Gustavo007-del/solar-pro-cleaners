@@ -15,7 +15,7 @@ const nameMl = process.env.EXPO_PUBLIC_APP_NAME_ML?.trim() || configuredName || 
 const baseId = process.env.ANDROID_APPLICATION_ID?.trim() || branding.applicationId;
 const variantSuffix = appEnvironment === 'production' ? '' : `.${appEnvironment}`;
 const schemeSuffix = appEnvironment === 'production' ? '' : `-${appEnvironment}`;
-const projectId = process.env.EAS_PROJECT_ID?.trim();
+const projectId = process.env.EAS_PROJECT_ID?.trim() || '65562a15-9615-4e78-8c42-02d4cd3d652e';
 const sdkOverride = process.env.ANDROID_TARGET_SDK?.trim();
 const targetSdkVersion = sdkOverride ? Number(sdkOverride) : undefined;
 if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdkOverride) || Number(sdkOverride) <= 0)) {
@@ -24,6 +24,7 @@ if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdk
 
 const plugins: NonNullable<ExpoConfig['plugins']> = [
   'expo-router',
+  ['expo-secure-store', { faceIDPermission: false }],
   ['expo-splash-screen', { image: branding.assets.splash, imageWidth: 160, resizeMode: 'contain', backgroundColor: palette.deep }],
   ['expo-navigation-bar', { enforceContrast: true, barStyle: 'dark', visibility: 'visible' }],
   ['expo-location', {
@@ -36,9 +37,10 @@ const plugins: NonNullable<ExpoConfig['plugins']> = [
   }],
 ];
 
-if (targetSdkVersion !== undefined) {
-  plugins.push(['expo-build-properties', { android: { compileSdkVersion: targetSdkVersion, targetSdkVersion } }]);
-}
+plugins.push(['expo-build-properties', { android: {
+  compileSdkVersion: targetSdkVersion, targetSdkVersion,
+  usesCleartextTraffic: appEnvironment === 'development',
+} }]);
 
 const blockedPermissions = [
   'android.permission.ACCESS_BACKGROUND_LOCATION',
@@ -64,7 +66,7 @@ if (appEnvironment !== 'development') blockedPermissions.push('android.permissio
 export default {
   name,
   slug: branding.slug,
-  owner: process.env.EXPO_OWNER?.trim() || undefined,
+  owner: process.env.EXPO_OWNER?.trim() || 'shijil.py',
   version: branding.version,
   scheme: `${branding.scheme}${schemeSuffix}`,
   orientation: 'portrait',
@@ -97,6 +99,6 @@ export default {
     ml: './src/locales/native/ml.json',
   },
   plugins,
-  extra: { appEnvironment, nameMl, ...(projectId ? { eas: { projectId } } : {}) },
+  extra: { appEnvironment, nameMl, eas: { projectId } },
   experiments: { typedRoutes: true },
 } satisfies ExpoConfig;

@@ -10,6 +10,9 @@ import { InfoCard } from '@/components/surfaces/ContentCards';
 import { appRoutes } from '@/constants/routes';
 import { AccountMenu } from '@/features/account/components/AccountMenu';
 import { useApplication } from '@/providers/ApplicationProvider';
+import { useBookingResource } from '@/features/booking/hooks/useBookingResource';
+import { BookingErrorState } from '@/features/booking/components/BookingFeedback';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { colors, spacing, typography } from '@/theme';
 
 import { ProfileHero } from '../components/ProfileHero';
@@ -17,7 +20,9 @@ import { ProfileInformation } from '../components/ProfileInformation';
 
 export function ProfileScreen() {
   const { t } = useTranslation();
-  const { profile } = useApplication();
+  const { profile, reloadProfile } = useApplication();
+  const current = useBookingResource(profile?.customerId, reloadProfile);
+  const message = useApiMessage();
 
   return (
     <ScreenContainer edges={['top', 'left', 'right']}>
@@ -27,6 +32,8 @@ export function ProfileScreen() {
           <>
             <Entrance><ProfileHero profile={profile} /></Entrance>
             <ProfileInformation profile={profile} />
+            {current.failed && <BookingErrorState title={t('error.title')}
+              description={message(current.error, t('error.description'))} onRetry={current.refresh} />}
             <PrimaryButton fullWidth label={t('booking.customer.edit')} onPress={() => router.push(appRoutes.editProfile)} />
             <Entrance variant="fade">
               <AccountMenu items={[

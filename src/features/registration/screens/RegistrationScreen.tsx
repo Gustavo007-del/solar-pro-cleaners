@@ -11,11 +11,13 @@ import { AnimatedPressable } from '@/components/motion/AnimatedPressable';
 import { Entrance } from '@/components/motion/Entrance';
 import { appRoutes } from '@/constants/routes';
 import { useSaveAction } from '@/hooks/useSaveAction';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, radius, sizes, spacing, typography } from '@/theme';
 
 import { RegistrationFields } from '../components/RegistrationFields';
 import { type RegistrationInput, type RegistrationOutput, registrationSchema } from '../schemas/registrationSchema';
+import { applyProfileValidation } from '../schemas/profileValidation';
 
 const legalLinks = [
   { href: appRoutes.privacy, label: 'legal.privacy' },
@@ -24,9 +26,10 @@ const legalLinks = [
 
 export function RegistrationScreen() {
   const { t } = useTranslation();
-  const { completeRegistration } = useApplication();
-  const { pending, failed, save } = useSaveAction();
-  const { control, handleSubmit } = useForm<RegistrationInput, unknown, RegistrationOutput>({
+  const { completeRegistration, knownInstallation, signIn } = useApplication();
+  const { pending, failed, error, save } = useSaveAction();
+  const message = useApiMessage();
+  const { control, handleSubmit, setError } = useForm<RegistrationInput, unknown, RegistrationOutput>({
     resolver: zodResolver(registrationSchema),
     defaultValues: { fullName: '', primaryPhone: '', alternatePhone: '' },
     mode: 'onTouched',
@@ -35,7 +38,8 @@ export function RegistrationScreen() {
 
   const submit = handleSubmit((details) => save(async () => {
     Keyboard.dismiss();
-    await completeRegistration(details);
+    try { await completeRegistration(details); }
+    catch (failure) { applyProfileValidation(failure, setError); throw failure; }
   }));
 
   return (
@@ -44,11 +48,11 @@ export function RegistrationScreen() {
         <ScrollContainer keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
           <Entrance style={styles.form}>
             <View style={styles.intro}>
-              <Text accessibilityRole="header" style={[typography.display, styles.title]}>{t('registration.title')}</Text>
-              <Text style={[typography.body, styles.supporting]}>{t('registration.description')}</Text>
+              <Text accessibilityRole="header" style={[typography.display, styles.title]}>{t(knownInstallation ? 'integration.signIn' : 'registration.title')}</Text>
+              <Text style={[typography.body, styles.supporting]}>{t(knownInstallation ? 'integration.signInHelp' : 'registration.description')}</Text>
             </View>
 
-            <RegistrationFields control={control} disabled={pending} />
+            {!knownInstallation && <RegistrationFields control={control} disabled={pending} />}
 
             <View style={styles.privacy}>
               <ShieldCheck size={sizes.icon.md} color={colors.deep} />
@@ -57,15 +61,15 @@ export function RegistrationScreen() {
           </Entrance>
 
           <View style={styles.footer}>
-            {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{t('error.save')}</Text>}
+            {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{message(error, t('error.save'))}</Text>}
             <PrimaryButton
-              label={t('common.saveAndContinue')}
+              label={t(knownInstallation ? 'integration.signIn' : 'common.saveAndContinue')}
               loadingLabel={t('common.saving')}
               icon={ArrowRight}
               iconPosition="end"
               fullWidth
               loading={pending}
-              onPress={() => { void submit(); }}
+              onPress={() => { if (knownInstallation) void save(signIn); else void submit(); }}
             />
             <View style={styles.links}>
               {legalLinks.map(({ href, label }) => (

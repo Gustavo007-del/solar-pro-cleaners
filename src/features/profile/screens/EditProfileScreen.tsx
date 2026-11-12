@@ -13,6 +13,8 @@ import { appRoutes } from '@/constants/routes';
 import { RegistrationFields } from '@/features/registration/components/RegistrationFields';
 import { type RegistrationInput, type RegistrationOutput, registrationSchema } from '@/features/registration/schemas/registrationSchema';
 import { useSaveAction } from '@/hooks/useSaveAction';
+import { useApiMessage } from '@/hooks/useApiMessage';
+import { applyProfileValidation } from '@/features/registration/schemas/profileValidation';
 import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, spacing, typography } from '@/theme';
 import type { CustomerDetails, CustomerProfile } from '@/types/customerProfile';
@@ -42,8 +44,9 @@ function EditProfileForm({ profile }: { profile: CustomerProfile }) {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { editProfile } = useApplication();
-  const { pending, failed, save } = useSaveAction();
-  const { control, handleSubmit, formState: { isDirty, dirtyFields } } = useForm<RegistrationInput, unknown, RegistrationOutput>({
+  const { pending, failed, error, save } = useSaveAction();
+  const message = useApiMessage();
+  const { control, handleSubmit, setError, formState: { isDirty, dirtyFields } } = useForm<RegistrationInput, unknown, RegistrationOutput>({
     resolver: zodResolver(registrationSchema),
     defaultValues: { fullName: profile.fullName, primaryPhone: profile.primaryPhone, alternatePhone: profile.alternatePhone ?? '' },
     mode: 'onTouched',
@@ -56,7 +59,8 @@ function EditProfileForm({ profile }: { profile: CustomerProfile }) {
     if (dirtyFields.fullName) changes.fullName = details.fullName;
     if (dirtyFields.primaryPhone) changes.primaryPhone = details.primaryPhone;
     if (dirtyFields.alternatePhone) changes.alternatePhone = details.alternatePhone;
-    await editProfile(changes);
+    try { await editProfile(changes); }
+    catch (failure) { applyProfileValidation(failure, setError); throw failure; }
     if (navigation.isFocused()) goBack();
   }));
 
@@ -64,7 +68,7 @@ function EditProfileForm({ profile }: { profile: CustomerProfile }) {
     <Entrance style={styles.content}>
       <Text style={[typography.body, styles.copy]}>{t('profile.editDescription')}</Text>
       <AppCard><RegistrationFields control={control} disabled={pending} /></AppCard>
-      {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{t('error.save')}</Text>}
+      {failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>{message(error, t('error.save'))}</Text>}
       <PrimaryButton
         label={t('profile.saveChanges')}
         loadingLabel={t('common.saving')}

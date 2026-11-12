@@ -9,6 +9,7 @@ import { SafeAreaWrapper, ScrollContainer } from '@/components/layout/Containers
 import { Entrance } from '@/components/motion/Entrance';
 import { LoadingIndicator } from '@/components/motion/LoadingIndicator';
 import { useApplication } from '@/providers/ApplicationProvider';
+import { useApiMessage } from '@/hooks/useApiMessage';
 import { colors, durations, radius, sizes, spacing, typography } from '@/theme';
 
 const markEntrance = ZoomIn
@@ -17,8 +18,9 @@ const markEntrance = ZoomIn
   .reduceMotion(ReduceMotion.System);
 
 export function SplashScreen() {
-  const { phase, retryInitialization } = useApplication();
+  const { phase, initializationError, retryInitialization } = useApplication();
   const { t } = useTranslation();
+  const message = useApiMessage();
 
   return (
     <LinearGradient colors={[colors.deep, colors.heroEnd]} style={styles.fill}>
@@ -34,7 +36,7 @@ export function SplashScreen() {
           <View style={styles.status}>
             {phase === 'unavailable' ? (
               <>
-                <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.tagline]}>{t('error.startup')}</Text>
+                <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.tagline]}>{message(initializationError, t('error.startup'))}</Text>
                 <SecondaryButton label={t('common.retry')} onPress={retryInitialization} />
               </>
             ) : (

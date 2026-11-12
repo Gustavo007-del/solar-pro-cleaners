@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { CalendarDays, FileText, Languages, Shield, Sun, Trash2, Type, UserRound, UserRoundPen } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { CalendarDays, FileText, Languages, MapPin, Shield, Sun, Trash2, Type, UserRound, UserRoundPen } from 'lucide-react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
+import { OutlineButton } from '@/components/buttons/Buttons';
 import { DetailRows } from '@/components/layout/DetailRows';
 import { AppHeader, SectionHeader } from '@/components/layout/Headers';
 import { SelectionCard } from '@/components/forms/Selection';
@@ -14,6 +15,8 @@ import { appRoutes } from '@/constants/routes';
 import { AccountMenu } from '@/features/account/components/AccountMenu';
 import { useAppLanguage } from '@/hooks/useAppLanguage';
 import { useSaveAction } from '@/hooks/useSaveAction';
+import { useApiMessage } from '@/hooks/useApiMessage';
+import { useApplication } from '@/providers/ApplicationProvider';
 import { colors, sizes, spacing, typography } from '@/theme';
 import { backOrReplace } from '@/utils/navigation';
 
@@ -26,7 +29,18 @@ export function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const { locale, setLocale } = useAppLanguage();
   const { pending, failed, save } = useSaveAction();
+  const { logout } = useApplication();
+  const signOut = useSaveAction();
+  const message = useApiMessage();
   const currentLanguage = i18n.resolvedLanguage ?? locale;
+
+  function confirmLogout(all: boolean) {
+    const label = t(all ? 'integration.logoutAll' : 'integration.logout');
+    Alert.alert(label, t('integration.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: label, style: 'destructive', onPress: () => { void signOut.save(() => logout(all)); } },
+    ]);
+  }
 
   return (
     <ScreenContainer>
@@ -59,9 +73,16 @@ export function SettingsScreen() {
             { icon: UserRoundPen, label: t('booking.customer.edit'), description: t('settings.editDescription'), onPress: () => router.push(appRoutes.editProfile) },
             { icon: CalendarDays, label: t('nav.bookings'), description: t('profile.menu.bookings'), onPress: () => router.dismissTo(appRoutes.myBookings) },
             { icon: UserRound, label: t('profile.accountInformation'), description: t('settings.accountDescription'), onPress: () => router.push(appRoutes.accountInformation) },
+            { icon: MapPin, label: t('integration.savedAddresses'), onPress: () => router.push(appRoutes.savedAddresses) },
             { icon: Trash2, label: t('accountDeletion.action'), destructive: true, onPress: () => router.push(appRoutes.deleteAccount) },
           ]} />
         </Entrance>
+        <AppCard>
+          <OutlineButton label={t('integration.logout')} disabled={signOut.pending} onPress={() => confirmLogout(false)} />
+          <OutlineButton label={t('integration.logoutAll')} disabled={signOut.pending} onPress={() => confirmLogout(true)} />
+          {signOut.pending && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+          {signOut.failed && <Text style={[typography.supporting, styles.error]}>{message(signOut.error, t('error.save'))}</Text>}
+        </AppCard>
         <Entrance variant="fade">
           <AccountMenu title={t('settings.legal')} items={[
             { icon: Shield, label: t('legal.privacy'), description: t('settings.privacyDescription'), onPress: () => router.push(appRoutes.privacy) },
