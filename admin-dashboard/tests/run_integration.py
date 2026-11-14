@@ -103,7 +103,7 @@ def run_servers(database_url: str, preview: bool) -> None:
                     raise RuntimeError("The local API did not start.")
                 sleep(.05)
             web_env = {**os.environ, "API_BASE_URL": api_base.removesuffix("/api/v1"), "DASHBOARD_ORIGIN": dashboard,
-                       "NEXT_TELEMETRY_DISABLED": "1"}
+                       "NEXT_TELEMETRY_DISABLED": "1", "SOLAR_TEST_NEXT_DIST_DIR": ".next/integration"}
             process = subprocess.Popen(["node", "node_modules/next/dist/bin/next", "dev",
                                         "--hostname", "127.0.0.1", "--port", str(port)], cwd=DASHBOARD, env=web_env)
             deadline = monotonic() + 120

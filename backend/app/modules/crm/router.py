@@ -169,31 +169,44 @@ def bulk(db: DatabaseSession, admin: Manager, body: BulkInput):
 
 
 def import_rows(db, actor, body, confirm):
-    rows = []
-    seen = set()
+    results = {}
+    valid = {}
     for index, raw in enumerate(body.rows, start=1):
         try:
-            data = LeadWrite.model_validate(raw)
-            if db.get(LeadSource, data.source) is None:
-                raise AppError(422, "unknown_source", "Unknown lead source.")
-            duplicate = bool(data.phone and (data.phone in seen or crm.duplicates(db, data.phone)))
-            if data.phone:
-                seen.add(data.phone)
-            if duplicate and not body.allow_duplicates:
-                rows.append({"row": index, "status": "duplicate", "message": "Phone already exists."})
-                continue
-            incomplete = not data.name or not data.phone or not data.installation_date
-            if confirm:
-                with db.begin_nested():
-                    crm.save(db, actor, data, allow_duplicate=body.allow_duplicates)
-            rows.append({"row": index, "status": "imported" if confirm else "valid",
-                         "duplicate": duplicate, "requires_review": incomplete})
+            valid[index] = LeadWrite.model_validate(raw)
         except ValidationError as error:
             fields = ", ".join(str(issue["loc"][0]) if issue["loc"] else "record" for issue in error.errors())
-            rows.append({"row": index, "status": "invalid", "message": f"Check {fields}."})
-        except AppError as error:
-            rows.append({"row": index, "status": "duplicate" if error.code == "duplicate_lead" else "invalid",
-                         "message": error.message})
+            results[index] = {"status": "invalid", "message": f"Check {fields}."}
+
+    sources = set(db.scalars(select(LeadSource.name).where(LeadSource.name.in_({data.source for data in valid.values()}))))
+    phones = {data.phone for data in valid.values() if data.phone and data.source in sources}
+    if confirm:
+        crm.lock_phones(db, phones)
+    seen = set()
+    blocked = set()
+    if phones:
+        for phone, status in db.execute(select(Lead.phone, Lead.status).where(Lead.phone.in_(phones)).distinct()):
+            seen.add(phone)
+            if status == crm.NO_CONTACT:
+                blocked.add(phone)
+
+    for index, data in valid.items():
+        if data.source not in sources:
+            results[index] = {"status": "invalid", "message": "Unknown lead source."}
+        elif data.phone in blocked:
+            results[index] = {"status": "invalid", "message": "This phone number is marked Do Not Contact."}
+        elif data.phone in seen and not body.allow_duplicates:
+            results[index] = {"status": "duplicate", "message": "Phone already exists."}
+        else:
+            results[index] = {"status": "imported" if confirm else "valid", "duplicate": data.phone in seen,
+                              "requires_review": not data.name or not data.phone or not data.installation_date}
+            if confirm:
+                crm.new_lead(db, actor, data, allow_duplicate=body.allow_duplicates)
+            if data.phone:
+                seen.add(data.phone)
+    if confirm:
+        db.flush()
+    rows = [{"row": index, **results[index]} for index in sorted(results)]
     return {"total": len(rows), "imported": sum(row["status"] == "imported" for row in rows),
             "skipped": sum(row["status"] in {"invalid", "duplicate"} for row in rows), "rows": rows}
 

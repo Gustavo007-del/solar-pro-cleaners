@@ -88,9 +88,10 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   const upstream = new URL(config.base.href);
   upstream.pathname += '/' + path.join('/');
   upstream.search = request.nextUrl.search;
+  const importingLeads = method === 'POST' && path.join('/') === 'admin/crm/import/confirm';
   try {
     const response = await fetch(upstream, { method, headers, body: body || undefined, cache: 'no-store',
-      redirect: 'error', signal: AbortSignal.timeout(15_000) });
+      redirect: 'error', signal: AbortSignal.timeout(importingLeads ? 45_000 : 15_000) });
     const responseHeaders = new Headers({ 'Cache-Control': 'no-store' });
     for (const name of ['content-type', 'retry-after', 'x-request-id', 'www-authenticate']) {
       const value = response.headers.get(name);

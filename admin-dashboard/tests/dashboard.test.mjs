@@ -134,6 +134,14 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   const preview = await send(crm + '/import/preview', { method: 'POST', body: { rows } });
   assert.deepEqual(preview.rows.map((row) => row.status), ['duplicate', 'invalid', 'valid']);
   assert.equal((await send(crm + '/import/confirm', { method: 'POST', body: { rows } })).imported, 1);
+  const batch = Array.from({ length: 32 }, (_, index) => ({
+    phone: '900000' + String(3100 + index), source: 'Solar installation data',
+  }));
+  const batchBody = { rows: batch };
+  assert.equal((await send(crm + '/import/confirm', { method: 'POST', body: batchBody })).imported, 32);
+  const retry = await send(crm + '/import/confirm', { method: 'POST', body: batchBody });
+  assert.equal(retry.imported, 0);
+  assert.ok(retry.rows.every((row) => row.status === 'duplicate'));
   await send(crm + '/sources', { method: 'POST', status: 201, body: { name: 'Fixture source' } });
   assert.ok((await send(crm + '/sources')).includes('Fixture source'));
   assert.equal((await send(leadPath + '/customer-matches'))[0].id, customer.customer.id);

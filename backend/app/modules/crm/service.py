@@ -1,4 +1,6 @@
-from sqlalchemy import func, select, update
+from uuid import uuid4
+
+from sqlalchemy import func, select, text, update
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import Session
 
@@ -53,24 +55,45 @@ def duplicates(db, phone, lead_id=None):
     return db.scalar(select(query.exists()))
 
 
+def lock_phones(db, phones):
+    if phones:
+        # Use the same lock as single-lead writes and a stable order across imports.
+        db.execute(text("""
+            SELECT pg_advisory_xact_lock(hashtextextended('crm:' || phone, 0))
+            FROM (SELECT phone FROM unnest(CAST(:phones AS text[])) AS phone ORDER BY phone COLLATE "C") AS ordered_phones
+        """), {"phones": sorted(phones)})
+
+
+def new_lead(db, actor, data, *, allow_duplicate=False):
+    lead = Lead(id=uuid4(), status="new", created_by=actor.id,
+                assigned_to=actor.id if actor.role == AdminRole.STAFF else None)
+    apply_fields(lead, data)
+    db.add(lead)
+    event(db, lead, actor, "created", duplicate_confirmed=allow_duplicate)
+    return lead
+
+
+def apply_fields(lead, data):
+    for field in CORE_FIELDS:
+        setattr(lead, field, getattr(data, field))
+    lead.details = data.model_dump(mode="json", exclude=CORE_FIELDS | {"allow_duplicate"})
+
+
 def save(db: Session, actor, data: LeadInput, *, lead=None, allow_duplicate=False):
     if db.get(LeadSource, data.source) is None:
         raise AppError(422, "unknown_lead_source", "Choose an existing lead source.")
     if data.phone and (lead is None or data.phone != lead.phone):
-        db.execute(select(func.pg_advisory_xact_lock(func.hashtextextended("crm:" + data.phone, 0))))
+        lock_phones(db, {data.phone})
         if duplicates(db, data.phone, lead.id if lead else None) and not allow_duplicate:
             raise AppError(409, "duplicate_lead", "This phone number is already in CRM. Confirm before creating a separate record.")
         if db.scalar(select(select(Lead.id).where(Lead.phone == data.phone, Lead.status == NO_CONTACT).exists())):
             raise AppError(409, "lead_contact_blocked", "This phone number is marked Do Not Contact.")
-    creating = lead is None
-    if creating:
-        lead = Lead(status="new", created_by=actor.id, assigned_to=actor.id if actor.role == AdminRole.STAFF else None)
-        db.add(lead)
-    for field in CORE_FIELDS:
-        setattr(lead, field, getattr(data, field))
-    lead.details = data.model_dump(mode="json", exclude=CORE_FIELDS | {"allow_duplicate"})
+    if lead is None:
+        lead = new_lead(db, actor, data, allow_duplicate=allow_duplicate)
+    else:
+        apply_fields(lead, data)
+        event(db, lead, actor, "edited", duplicate_confirmed=allow_duplicate)
     db.flush()
-    event(db, lead, actor, "created" if creating else "edited", duplicate_confirmed=allow_duplicate)
     return lead
 
 

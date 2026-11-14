@@ -5,6 +5,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
   devIndicators: false,
+  distDir: process.env.SOLAR_TEST_NEXT_DIST_DIR || '.next',
   turbopack: { root: path.resolve(process.cwd()) },
   async headers() {
     return [{
