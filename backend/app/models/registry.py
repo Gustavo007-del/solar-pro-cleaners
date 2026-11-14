@@ -5,6 +5,7 @@ from app.modules.admins.models import AdminAuditLog, AdminLoginBucket, AdminSess
 from app.modules.bookings.models import Booking, BookingAddress, BookingAdminNote, BookingPricingSnapshot, BookingStatusHistory
 from app.modules.business.models import BusinessClosure, BusinessOperatingHour, BusinessProfile
 from app.modules.customers.models import Customer, CustomerInstallation, RefreshSession
+from app.modules.crm.models import FollowUp, Lead, LeadEvent, LeadSource
 from app.modules.locations.models import CustomerAddress, ServiceArea
 from app.modules.notifications.models import CustomerDevice, NotificationCampaign, NotificationDelivery, NotificationExecution
 from app.modules.pricing.models import ServicePrice
@@ -12,6 +13,7 @@ from app.modules.services.models import Service
 from app.modules.technicians.models import BookingAssignment, Technician, TechnicianAvailability, TechnicianLeave
 
 __all__ = [
+    "FollowUp", "Lead", "LeadEvent", "LeadSource",
     "AdminAuditLog", "AdminLoginBucket", "AdminSession", "AdminUser",
     "Base", "Booking", "BookingAddress", "BookingAdminNote", "BookingPricingSnapshot", "BookingStatusHistory",
     "BusinessClosure", "BusinessOperatingHour", "BusinessProfile",

@@ -8,6 +8,7 @@ from app.modules.bookings.admin_router import router as admin_bookings_router
 from app.modules.business.router import router as business_router
 from app.modules.customers.router import router as customers_router
 from app.modules.customers.admin_router import router as admin_customers_router
+from app.modules.crm.router import router as crm_router
 from app.modules.locations.router import router as locations_router
 from app.modules.locations.router import location_router
 from app.modules.locations.address_router import router as saved_addresses_router
@@ -23,6 +24,6 @@ for module_router in (
     system_router, public_info_router, customers_router, bookings_router, services_router,
     locations_router, location_router, saved_addresses_router, business_router, availability_router,
     admins_router, admin_bookings_router, admin_customers_router, admin_dashboard_router,
-    technicians_router, admin_assignments_router, customer_notifications_router, admin_notifications_router,
+    technicians_router, admin_assignments_router, customer_notifications_router, admin_notifications_router, crm_router,
 ):
     router.include_router(module_router)

@@ -21,6 +21,7 @@ from app.modules.bookings.serialization import booking_details
 from app.modules.bookings.status import BookingStatus, CUSTOMER_CANCELLABLE_STATUSES
 from app.modules.bookings.transitions import transition_locked_booking
 from app.modules.customers.credentials import utc_now
+from app.modules.customers.models import Customer
 from app.modules.customers.service import CustomerContext, lock_authenticated_session
 from app.modules.locations.address_schemas import AddressInput
 from app.modules.locations.addresses import resolve_saved_address
@@ -113,34 +114,43 @@ def create_booking(
                     raise AppError(409, "idempotency_conflict", "This idempotency key was used for a different booking request.")
                 return booking_details(owned_details(db, customer.id, existing.id)), False
 
-        address = data.address
-        if data.saved_address_id is not None:
-            address = resolve_saved_address(db, customer.id, data.saved_address_id, data.address_overrides)
-        service = require_active_service(db, data.service_id, lock=True)
-        coverage_matched = validate_booking_details(db, data.service_date, address)
+        return create_booking_for_locked_customer(
+            db, customer, data, key_hash=key_hash, request_hash=request_hash,
+        ), True
 
-        now = utc_now()
-        booking_id = uuid4()
-        pricing = _pricing_snapshot(db, booking_id, service.id, data.pricing.panel_quantity, now)
-        _insert_booking(db, {
-            "id": booking_id, "customer_id": customer.id, "service_id": service.id,
-            "status": BookingStatus.PENDING, "status_version": 0, "service_date": data.service_date,
-            "customer_name_snapshot": customer.full_name, "customer_phone_snapshot": customer.phone_number,
-            "alternate_phone_snapshot": customer.alternate_phone_number, "service_name_snapshot": service.name,
-            "customer_instructions": data.customer_instructions, "coverage_matched": coverage_matched,
-            "idempotency_key_hash": key_hash, "request_hash": request_hash, "created_at": now, "updated_at": now,
-        })
-        if address is not None:
-            db.add(address_snapshot(booking_id, address))
-        db.add_all([
-            pricing,
-            BookingStatusHistory(
-                booking_id=booking_id, sequence=0, old_status=None, new_status=BookingStatus.PENDING,
-                changed_by_type="customer", changed_by_id=customer.id, created_at=now,
-            ),
-        ])
-        db.flush()
-        return booking_details(owned_details(db, customer.id, booking_id)), True
+
+def create_booking_for_locked_customer(
+    db: Session, customer: Customer, data: BookingCreate, *,
+    key_hash: str | None = None, request_hash: str | None = None, admin_id: UUID | None = None,
+) -> BookingDetails:
+    address = data.address
+    if data.saved_address_id is not None:
+        address = resolve_saved_address(db, customer.id, data.saved_address_id, data.address_overrides)
+    service = require_active_service(db, data.service_id, lock=True)
+    coverage_matched = validate_booking_details(db, data.service_date, address)
+
+    now = utc_now()
+    booking_id = uuid4()
+    pricing = _pricing_snapshot(db, booking_id, service.id, data.pricing.panel_quantity, now)
+    _insert_booking(db, {
+        "id": booking_id, "customer_id": customer.id, "service_id": service.id,
+        "status": BookingStatus.PENDING, "status_version": 0, "service_date": data.service_date,
+        "customer_name_snapshot": customer.full_name, "customer_phone_snapshot": customer.phone_number,
+        "alternate_phone_snapshot": customer.alternate_phone_number, "service_name_snapshot": service.name,
+        "customer_instructions": data.customer_instructions, "coverage_matched": coverage_matched,
+        "idempotency_key_hash": key_hash, "request_hash": request_hash, "created_at": now, "updated_at": now,
+    })
+    if address is not None:
+        db.add(address_snapshot(booking_id, address))
+    db.add_all([
+        pricing,
+        BookingStatusHistory(
+            booking_id=booking_id, sequence=0, old_status=None, new_status=BookingStatus.PENDING,
+            changed_by_type="admin" if admin_id else "customer", changed_by_id=admin_id or customer.id, created_at=now,
+        ),
+    ])
+    db.flush()
+    return booking_details(owned_details(db, customer.id, booking_id))
 
 
 def list_customer_bookings(db: Session, context: CustomerContext, query: BookingListQuery) -> CustomerBookingPage:

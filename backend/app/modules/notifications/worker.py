@@ -10,13 +10,14 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings, get_settings
 from app.core.database import create_database
 from app.core.logging import configure_logging
+from app.models import registry as _model_registry  # Resolve foreign keys in this standalone process.
 from app.modules.customers.credentials import utc_now
 from app.modules.notifications.expo import ExpoClient, ExpoFailure
 from app.modules.notifications.queue import (
     claim_campaigns, claim_receipts, claim_sends, recover_and_finalize, store_receipts, store_sends,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("app.modules.notifications.worker")
 
 
 def run_cycle(db: Session, settings: Settings, expo: ExpoClient, stop: Event) -> None:
@@ -69,8 +70,12 @@ def main() -> None:
                 with database.sessions() as db:
                     run_cycle(db, settings, expo, stop)
                 delay = settings.notification_poll_seconds
-            except SQLAlchemyError:
-                logger.error("notification_database_issue", extra={"event": "notification_database_issue"})
+            except SQLAlchemyError as error:
+                original = getattr(error, "orig", error)
+                logger.error("notification_database_issue", extra={
+                    "event": "notification_database_issue",
+                    "error_code": getattr(original, "sqlstate", None) or type(original).__name__,
+                })
                 delay = min(300, max(5, delay * 2))
             except Exception:
                 logger.error("notification_cycle_failed", extra={"event": "notification_cycle_failed"})

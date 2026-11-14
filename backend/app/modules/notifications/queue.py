@@ -58,11 +58,12 @@ def claim_campaigns(db: Session, now: datetime, limit: int) -> int:
             ).where(*eligible_devices())
             if campaign.recipient_type == "selected_customers":
                 recipients = recipients.where(Device.customer_id.in_([UUID(x) for x in campaign.customer_ids]))
-            result = db.execute(insert(Delivery.__table__).from_select(
+            inserted = insert(Delivery.__table__).from_select(
                 ["id", "execution_id", "customer_id", "device_id", "device_revision", "platform", "status", "available_at"],
                 recipients, include_defaults=False,
-            ))
-            execution.recipients_count = result.rowcount
+            ).returning(Delivery.__table__.c.id).cte("inserted_deliveries")
+            # Some drivers report -1 for INSERT ... SELECT. Count the rows PostgreSQL inserted.
+            execution.recipients_count = db.scalar(select(func.count()).select_from(inserted))
             campaign.status = "active"
             campaign.occurrence_count += 1
         return len(campaigns)

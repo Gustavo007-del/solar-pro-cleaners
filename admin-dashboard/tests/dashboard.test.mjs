@@ -64,6 +64,10 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   const owner = browser();
   const { send } = owner;
   await send('/admin/me', { status: 401 });
+  const home = await fetch(fixture.dashboard + '/', { redirect: 'manual' });
+  assert.equal(home.status, 200);
+  assert.match(await home.text(), /Keep your solar panels clean/);
+  await send('/admin/crm/leads', { status: 401 });
   await send('/customers/me', { status: 404 });
   await send('/services', { method: 'POST', status: 404 });
   await send('/admin/auth/login', { method: 'POST', body: { email: fixture.email, password: fixture.password },
@@ -92,6 +96,56 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   await staffClient.send('/admin/users', { status: 403 });
 
   const customer = await seedCustomer('9000000201');
+  const crm = '/admin/crm';
+  assert.equal((await send(crm + '/overview')).total, 0);
+  const lead = await send(crm + '/leads', { method: 'POST', status: 201, body: { phone: '9000000201' } });
+  const leadPath = crm + '/leads/' + lead.id;
+  assert.equal(lead.phone, '+919000000201');
+  await staffClient.send(leadPath, { status: 404 });
+  await send(crm + '/leads', { method: 'POST', status: 409, body: { phone: '+91 90000-00201' } });
+  const duplicate = await send(crm + '/leads', { method: 'POST', status: 201, body: {
+    phone: '+91 90000-00201', allow_duplicate: true,
+  } });
+  const partial = await send(crm + '/leads', { method: 'POST', status: 201, body: { location: 'Kochi' } });
+  await send(crm + '/leads/' + partial.id, { method: 'PUT', body: { location: 'Ernakulam', name: 'Partial record' } });
+  assert.equal((await send(crm + '/leads?search=Ernakulam&page_size=1')).items[0].id, partial.id);
+  await send(crm + '/leads/bulk', { method: 'POST', body: { ids: [lead.id], action: 'assign', assigned_to: staff.id } });
+  await staffClient.send(leadPath);
+  await staffClient.send(crm + '/staff', { status: 403 });
+  await staffClient.send(leadPath + '/notes', { method: 'POST', status: 201, body: { note: 'Fixture note' } });
+  await staffClient.send(leadPath + '/interactions', { method: 'POST', status: 201, body: { outcome: 'no_answer' } });
+  assert.equal((await send(leadPath)).status, 'no_answer');
+  const due = (days) => new Date(Date.now() + days * 86400000).toISOString();
+  const follow = await send(leadPath + '/follow-ups', { method: 'POST', status: 201, body: { due_at: due(1), reason: 'Callback' } });
+  const moved = await send(crm + '/follow-ups/' + follow.id + '/reschedule', {
+    method: 'POST', body: { due_at: due(2), reason: 'New callback' },
+  });
+  assert.notEqual(moved.id, follow.id);
+  await send(crm + '/follow-ups/' + moved.id + '/complete', { method: 'POST' });
+  assert.equal((await send(crm + '/follow-ups?bucket=history&lead_id=' + lead.id)).total, 2);
+  await send(leadPath + '/status', { method: 'POST', body: { status: 'do_not_contact' } });
+  const duplicatePath = crm + '/leads/' + duplicate.id;
+  assert.equal((await send(duplicatePath)).contact_blocked, true);
+  await send(duplicatePath + '/interactions', { method: 'POST', status: 409, body: { outcome: 'answered' } });
+  await staffClient.send(leadPath + '/interactions', { method: 'POST', status: 409, body: { outcome: 'answered' } });
+  await staffClient.send(leadPath + '/status', { method: 'POST', status: 403, body: { status: 'new', reason: 'Fixture' } });
+  await send(leadPath + '/status', { method: 'POST', body: { status: 'interested', reason: 'Verified fixture correction' } });
+  const rows = [{ phone: lead.phone }, { phone: 'invalid' }, { location: 'Test import' }];
+  const preview = await send(crm + '/import/preview', { method: 'POST', body: { rows } });
+  assert.deepEqual(preview.rows.map((row) => row.status), ['duplicate', 'invalid', 'valid']);
+  assert.equal((await send(crm + '/import/confirm', { method: 'POST', body: { rows } })).imported, 1);
+  await send(crm + '/sources', { method: 'POST', status: 201, body: { name: 'Fixture source' } });
+  assert.ok((await send(crm + '/sources')).includes('Fixture source'));
+  assert.equal((await send(leadPath + '/customer-matches'))[0].id, customer.customer.id);
+  await send(leadPath + '/convert', { method: 'POST', status: 422, body: { customer_id: randomUUID() } });
+  const converted = await send(leadPath + '/convert', { method: 'POST', body: {
+    customer_id: customer.customer.id, booking: { service_id: fixture.service_id },
+  } });
+  assert.equal(converted.status, 'converted');
+  assert.ok(converted.booking_id);
+  assert.equal((await send('/admin/bookings/' + converted.booking_id)).status, 'pending');
+  assert.ok((await send(crm + '/events?lead_id=' + lead.id)).total >= 8);
+  assert.equal((await send(crm + '/overview')).statuses.converted, 1);
   const campaigns = '/admin/notifications/campaigns';
   await staffClient.send(campaigns, { status: 403 });
   const draft = await send(campaigns, { method: 'POST', status: 201, body: {
@@ -111,7 +165,7 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   const second = await seedBooking(customer);
   const bookingPath = '/admin/bookings/' + booking.id;
   const bookings = await send('/admin/bookings?page_size=1');
-  assert.equal(bookings.total, 2);
+  assert.equal(bookings.total, 3);
   assert.equal(bookings.has_next, true);
   assert.equal((await send('/admin/bookings?search=' + booking.booking_reference)).items[0].id, booking.id);
   assert.equal((await send(bookingPath)).estimated_amount, '550.00');
@@ -161,7 +215,7 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
 
   const person = '/admin/customers/' + customer.customer.id;
   assert.equal((await send(person)).saved_addresses.total, 2);
-  assert.equal((await send(person + '/bookings')).total, 2);
+  assert.equal((await send(person + '/bookings')).total, 3);
   assert.equal((await send('/admin/customers?search=Local')).total, 1);
   await send(person, { method: 'PATCH', body: { full_name: 'Updated Customer' } });
   assert.equal((await send(person + '/deactivate', { method: 'POST' })).is_active, false);
@@ -171,7 +225,7 @@ test('booking and administration flows through Next.js and FastAPI', { skip: !fi
   assert.equal((await send('/business')).timezone, 'Asia/Kolkata');
   assert.equal((await send('/business/operating-hours')).days.length, 1);
   assert.equal((await send('/service-areas')).total, 0);
-  assert.equal((await send('/admin/dashboard/summary')).total_bookings, 2);
+  assert.equal((await send('/admin/dashboard/summary')).total_bookings, 3);
   assert.equal((await send('/admin/dashboard/bookings-analytics?interval=month')).cancelled, 1);
 
   const followUpCustomer = await seedCustomer('9000000202');

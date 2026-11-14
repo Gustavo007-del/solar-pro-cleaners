@@ -24,6 +24,13 @@ export const navigation: { title: string; entries: NavEntry[] }[] = [
     { id: 'customer-reports', label: 'Customer reports', icon: Activity, permissions: ['dashboard.read', 'customers.read'] },
     { id: 'technician-reports', label: 'Technician performance', icon: CalendarCheck2, permissions: ['technicians.assignments.read', 'technicians.availability.read'] },
   ] },
+  { title: 'CRM', entries: [
+    { id: 'crm', label: 'Leads overview', icon: Activity, permissions: ['crm.work'] },
+    { id: 'crm/leads', label: 'All leads', icon: Users, permissions: ['crm.work'] },
+    { id: 'crm/follow-ups', label: 'Follow-ups', icon: CalendarClock, permissions: ['crm.work'] },
+    { id: 'crm/calls', label: 'Call history', icon: ClipboardList, permissions: ['crm.work'] },
+    { id: 'crm/sources', label: 'Lead sources', icon: Settings2, permissions: ['crm.manage'] },
+  ] },
   { title: 'Administration', entries: [
     { id: 'admin-users', label: 'Admin users', icon: ShieldCheck, permissions: ['admin.users.read'] },
     { id: 'settings', label: 'Account settings', icon: Settings2, permissions: [] },

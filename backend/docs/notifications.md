@@ -61,7 +61,7 @@ Use one Expo project per deployment database. Use a separate test database and A
 
 ## Use and verify
 
-- On the test phone, sign in and open **Settings → Push notifications → Turn On Notifications**. Grant permission. Confirm the app shows notifications are on. Denying permission never prevents using bookings. The app synchronizes permission and token changes when it returns to the foreground and when the native token changes.
+- On the test phone, sign in and allow notifications when the system asks. Open **Settings → Push notifications** to verify that notifications are on. The updated app defaults to on when no preference has been saved and keeps any existing opt-out. Denying permission never prevents using bookings. The app synchronizes permission and token changes when it returns to the foreground and when the native token changes.
 - In the dashboard, open **Notifications → New campaign**. Create a draft for the test customer. Review the live preview and the schedule, then confirm **Send now**. Admins can send to selected customers. Only owners can activate or resume an all-customer campaign, and they must confirm the audience.
 - Test a one-time and a recurring send. Close the dashboard, put the phone in the background, then close the phone app and try again. Verify foreground presentation, tap navigation, and opt-out. A push that opens a booking still uses the existing booking ownership check.
 - On campaign details, use **Refresh** to check history. An accepted ticket means Expo queued the submission. `provider_accepted` means Expo reported successful handoff to FCM or APNs. Neither confirms the phone displayed it or the person read it. See [Expo tickets and receipts](https://docs.expo.dev/push-notifications/sending-notifications/).

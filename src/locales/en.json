@@ -581,6 +581,8 @@
     "on": "Notifications are on for this phone.",
     "off": "Notifications are off for this phone.",
     "denied": "This phone is blocking notifications. Allow them in system settings to receive updates.",
+    "permissionRequired": "Allow notifications on this phone to receive updates.",
+    "allow": "Allow Notifications",
     "error": "We couldn’t update notifications. Please try again.",
     "unavailable": "Push notifications require an installed Solar Care app build.",
     "openSettings": "Open Phone Settings",

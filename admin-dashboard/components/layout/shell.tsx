@@ -36,7 +36,8 @@ function Workspace({ children }: { children: ReactNode }) {
   const [search, setSearch] = useState('');
   const { profile, can } = usePermissions();
   const segments = pathname.split('/').filter(Boolean);
-  const active = entries.find((entry) => entry.id === segments[0]);
+  const active = [...entries].sort((a, b) => b.id.length - a.id.length)
+    .find((entry) => pathname === '/' + entry.id || pathname.startsWith('/' + entry.id + '/'));
   const allowed = active && can(...active.permissions);
 
   function searchBookings(event: FormEvent<HTMLFormElement>) {

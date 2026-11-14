@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 
 const authCookie = 'solar_admin_refresh';
 const publicReads = new Set(['services', 'service-areas', 'business', 'availability']);
-const adminGroups = new Set(['auth', 'me', 'users', 'bookings', 'customers', 'dashboard', 'technicians', 'notifications']);
+const adminGroups = new Set(['auth', 'me', 'users', 'bookings', 'customers', 'dashboard', 'technicians', 'notifications', 'crm']);
 const cookieActions = new Set(['login', 'refresh', 'logout', 'logout-all', 'change-password']);
 const maxBody = 65_536;
 

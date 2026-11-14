@@ -20,6 +20,8 @@ export function NotificationSettings() {
     </Text>}
     {status === 'denied' && <OutlineButton label={t('notifications.openSettings')} disabled={busy}
       onPress={() => { void Linking.openSettings().catch(() => undefined); }} />}
+    {status === 'permissionRequired' && <OutlineButton label={t('notifications.allow')} disabled={busy}
+      onPress={() => update(true)} />}
     {status === 'error' && <OutlineButton label={t('common.retry')} disabled={busy} onPress={retry} />}
     {status !== 'unavailable' && status !== 'loading' &&
       <OutlineButton label={t(optedIn ? 'notifications.disable' : 'notifications.enable')} disabled={busy}

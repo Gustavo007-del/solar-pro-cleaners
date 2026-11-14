@@ -10,6 +10,8 @@ class AdminRole(StrEnum):
 
 
 class Permission(StrEnum):
+    CRM_WORK = "crm.work"
+    CRM_MANAGE = "crm.manage"
     USERS_READ = "admin.users.read"
     USERS_CREATE = "admin.users.create"
     USERS_UPDATE = "admin.users.update"
@@ -54,6 +56,7 @@ class Permission(StrEnum):
 ROLE_PERMISSIONS = {
     AdminRole.OWNER: frozenset(Permission),
     AdminRole.ADMIN: frozenset({
+        Permission.CRM_WORK, Permission.CRM_MANAGE,
         Permission.BOOKINGS_READ, Permission.BOOKINGS_UPDATE, Permission.BOOKINGS_CANCEL,
         Permission.BOOKINGS_NOTES_READ, Permission.BOOKINGS_NOTES_CREATE, Permission.BOOKINGS_NOTES_UPDATE,
         Permission.CUSTOMERS_READ, Permission.CUSTOMERS_UPDATE,
@@ -68,6 +71,7 @@ ROLE_PERMISSIONS = {
         Permission.BOOKINGS_REASSIGN, Permission.BOOKINGS_UNASSIGN,
     }),
     AdminRole.STAFF: frozenset({
+        Permission.CRM_WORK,
         Permission.BOOKINGS_READ, Permission.SERVICES_READ, Permission.LOCATIONS_READ, Permission.DASHBOARD_READ,
     }),
 }

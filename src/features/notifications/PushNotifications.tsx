@@ -21,7 +21,7 @@ if (supported) Notifications.setNotificationHandler({
 
 const registered = z.object({ id: z.uuid(), notification_enabled: z.literal(true), last_registered_at: z.string() });
 const bookingId = z.uuid();
-type Status = 'loading' | 'on' | 'off' | 'denied' | 'error' | 'unavailable';
+type Status = 'loading' | 'on' | 'off' | 'permissionRequired' | 'denied' | 'error' | 'unavailable';
 type Permission = 'granted' | 'denied' | 'undetermined';
 type PushState = {
   status: Status;
@@ -33,6 +33,7 @@ type PushState = {
   retry: () => void;
 };
 const PushContext = createContext<PushState | undefined>(undefined);
+const defaultPermissionPromptKey = 'solar-care.push.default-permission-requested';
 
 // The runtime SDK includes the common Expo permission fields on both platforms.
 type PermissionResult = Pick<Notifications.NotificationPermissionsStatus, 'ios'> & {
@@ -74,7 +75,8 @@ export function PushNotifications({ children }: PropsWithChildren) {
           preference = intent ? 'enabled' : 'disabled_pending';
           await SecureStore.setItemAsync(target, preference);
         }
-        optedIn = preference === 'enabled';
+        // The previous default left no stored preference. Preserve both forms of explicit opt-out.
+        optedIn = preference === null || preference === 'enabled';
         if (preference === 'disabled_pending' && current.current === target) {
           await disableOnServer();
           await SecureStore.setItemAsync(target, 'disabled');
@@ -88,16 +90,23 @@ export function PushNotifications({ children }: PropsWithChildren) {
           if (current.current === target) setState({ status: 'off', busy: true, optedIn, permission: systemPermission });
           return;
         }
-        if (intent === true && permission.status === 'undetermined' && permission.canAskAgain) {
-          permission = await Notifications.requestPermissionsAsync({
-            ios: { allowAlert: true, allowSound: true, allowBadge: false },
-          }) as PermissionResult;
-          systemPermission = permissionStatus(permission);
+        if (systemPermission === 'undetermined' && permission.canAskAgain && AppState.currentState === 'active') {
+          const firstDefaultPrompt = preference === null && !await SecureStore.getItemAsync(defaultPermissionPromptKey);
+          if (current.current !== target) return;
+          if (intent === true || firstDefaultPrompt) {
+            await SecureStore.setItemAsync(defaultPermissionPromptKey, '1');
+            if (current.current !== target) return;
+            permission = await Notifications.requestPermissionsAsync({
+              ios: { allowAlert: true, allowSound: true, allowBadge: false },
+            }) as PermissionResult;
+            systemPermission = permissionStatus(permission);
+          }
         }
         if (current.current !== target) return;
         if (systemPermission !== 'granted') {
           await disableOnServer();
-          if (current.current === target) setState({ status: 'denied', busy: true, optedIn, permission: systemPermission });
+          const status = systemPermission === 'undetermined' && permission.canAskAgain ? 'permissionRequired' : 'denied';
+          if (current.current === target) setState({ status, busy: true, optedIn, permission: systemPermission });
           return;
         }
         const projectId = Constants.easConfig?.projectId ?? Constants.expoConfig?.extra?.eas?.projectId;
