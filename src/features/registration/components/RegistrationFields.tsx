@@ -1,7 +1,7 @@
 import { Phone, Smartphone, UserRound } from 'lucide-react-native';
 import { useRef } from 'react';
 import { Controller, type Control } from 'react-hook-form';
-import { StyleSheet, type TextInput, View } from 'react-native';
+import { Keyboard, StyleSheet, type TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { AppTextInput, PhoneInput } from '@/components/forms/TextFields';
@@ -10,9 +10,10 @@ import { maxCustomerNameLength } from '@/types/customerProfile';
 
 import type { RegistrationInput, RegistrationOutput } from '../schemas/registrationSchema';
 
-export function RegistrationFields({ control, disabled }: {
+export function RegistrationFields({ control, disabled, showAlternatePhone = true }: {
   control: Control<RegistrationInput, unknown, RegistrationOutput>;
   disabled: boolean;
+  showAlternatePhone?: boolean;
 }) {
   const { t } = useTranslation();
   const primary = useRef<TextInput>(null);
@@ -54,9 +55,9 @@ export function RegistrationFields({ control, disabled }: {
             label={t('registration.primary')}
             placeholder={t('registration.enterMobile')}
             leadingIcon={Smartphone}
-            returnKeyType="next"
+            returnKeyType={showAlternatePhone ? 'next' : 'done'}
             submitBehavior="submit"
-            onSubmitEditing={() => alternate.current?.focus()}
+            onSubmitEditing={() => { if (showAlternatePhone) alternate.current?.focus(); else Keyboard.dismiss(); }}
             editable={!disabled}
             value={field.value}
             onChangeText={field.onChange}
@@ -67,7 +68,7 @@ export function RegistrationFields({ control, disabled }: {
           />
         )}
       />
-      <Controller
+      {showAlternatePhone && <Controller
         control={control}
         name="alternatePhone"
         render={({ field, fieldState }) => (
@@ -86,7 +87,7 @@ export function RegistrationFields({ control, disabled }: {
             error={fieldState.error && t('registration.invalidMobile')}
           />
         )}
-      />
+      />}
     </View>
   );
 }

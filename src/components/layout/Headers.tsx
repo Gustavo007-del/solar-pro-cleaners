@@ -21,15 +21,17 @@ export function SectionHeader({ title, subtitle, action }: SectionHeaderProps) {
   );
 }
 
-export type AppHeaderProps = { title: string; onBack?: () => void; action?: ReactNode };
+export type AppHeaderProps = { title: string; onBack?: () => void; action?: ReactNode; compact?: boolean };
 
-export function AppHeader({ title, onBack, action }: AppHeaderProps) {
+export function AppHeader({ title, onBack, action, compact = false }: AppHeaderProps) {
   const { t } = useTranslation();
   const { screenMargin } = useScreenLayout();
   return (
     <View style={[styles.header, { paddingHorizontal: screenMargin }]}>
       {onBack && <IconButton icon={ArrowLeft} accessibilityLabel={t('common.back')} onPress={onBack} />}
-      <Text accessibilityRole="header" style={[typography.heading, styles.title, styles.headerTitle]}>{title}</Text>
+      <Text accessibilityRole="header" numberOfLines={compact ? 1 : undefined}
+        adjustsFontSizeToFit={compact} minimumFontScale={0.8}
+        style={[typography.heading, styles.title, styles.headerTitle, compact && styles.compactTitle]}>{title}</Text>
       {action}
     </View>
   );
@@ -48,6 +50,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   headerTitle: { flex: 1, minWidth: 0 },
+  compactTitle: { fontSize: 18, lineHeight: 27 },
   title: { color: colors.ink },
   subtitle: { color: colors.muted },
 });

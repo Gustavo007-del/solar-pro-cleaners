@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
-import { CalendarDays, LocateFixed, MapPin, Phone, Sun } from 'lucide-react-native';
+import { CalendarDays, LocateFixed, MapPin, Phone } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Keyboard, Linking, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -46,7 +46,7 @@ export function BookingScreen() {
 
   return (
     <ScreenContainer>
-      <AppHeader title={t('booking.title')} onBack={leaveBooking} />
+      <AppHeader compact title={t('booking.title')} onBack={leaveBooking} />
       <ScrollContainer>
         <AppCard>
           <Text style={typography.body}>{t('booking.customer.missing')}</Text>
@@ -84,6 +84,12 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
     || location.failure === 'servicesDisabled';
   const showServiceChoices = !serviceId || showServices || service.failed;
   const chooseAnother = (services.data?.first.total ?? 0) > 1;
+  const loadedService = service.failed ? undefined : service.data;
+  const showChangeService = chooseAnother && !showServices;
+  const showServiceLoading = !loadedService && (service.loading || services.loading);
+  const showServicePicker = showServiceChoices && !frozen && (services.data != null || services.error != null);
+  const showServiceControls = (loadedService && (needsQuantity || showChangeService))
+    || showServiceLoading || service.failed || showServicePicker;
 
   function captureLocation() {
     Keyboard.dismiss();
@@ -152,32 +158,23 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
 
   return (
     <ScreenContainer>
-      <AppHeader title={t('booking.title')} onBack={pending ? undefined : leaveBooking} />
+      <AppHeader compact title={t('booking.title')} onBack={pending ? undefined : leaveBooking} />
       <FormScrollContainer contentContainerStyle={styles.content}>
-        <AppCard>
-          <View style={styles.sectionHeading}>
-            <View style={styles.sectionIcon}>
-              <Sun size={sizes.icon.md} color={colors.deep} />
-            </View>
-            <Text accessibilityRole="header" style={styles.sectionTitle}>{t('booking.summary.service')}</Text>
-          </View>
-          {service.data && !service.failed ? <>
-            <View style={styles.serviceSummary}>
-              <Text style={styles.serviceName}>{service.data.name}</Text>
-              <ServicePricing pricing={service.data.pricing} />
-            </View>
+        {showServiceControls && <AppCard>
+          {loadedService && <>
             {needsQuantity && <AppTextInput label={t('integration.panelQuantity')} value={quantity}
               editable={!frozen} keyboardType="number-pad" maxLength={5}
               error={quantity && !quantityValid ? t('booking.form.quantityError') : undefined}
               onChangeText={(panelQuantity) => updateDraft({ panelQuantity })} />}
-            {chooseAnother && !showServices && <TextButton label={t('booking.form.changeService')}
+            {showChangeService && <TextButton label={t('booking.form.changeService')}
               disabled={frozen} onPress={() => setShowServices(true)} />}
-          </> : (service.loading || services.loading) && <Text style={typography.supporting}>{t('common.loading')}</Text>}
+          </>}
+          {showServiceLoading && <Text style={typography.supporting}>{t('common.loading')}</Text>}
           {service.failed && <View style={styles.group}>
             <Text accessibilityLiveRegion="polite" style={styles.error}>{message(service.error, t('booking.form.serviceLoadError'))}</Text>
             <TextButton label={t('common.retry')} disabled={frozen} onPress={service.refresh} />
           </View>}
-          {showServiceChoices && !frozen && <>
+          {showServicePicker && <>
             {services.data && services.data.first.total > 1 &&
               <Text accessibilityRole="header" style={typography.label}>{t('booking.form.chooseService')}</Text>}
             {!serviceId && services.data?.first.total === 0 && <>
@@ -197,7 +194,7 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
             {services.data?.hasNext && <TextButton label={t('integration.loadMore')} disabled={services.more}
               onPress={() => { void services.loadMore(); }} />}
           </>}
-        </AppCard>
+        </AppCard>}
 
         <AppCard style={styles.visitCard}>
           <View style={styles.sectionHeading}>
@@ -256,6 +253,9 @@ function BookingForm({ profile, initialServiceId }: { profile: CustomerProfile; 
           {draft.submission && !pending && <Text style={typography.supporting}>{t('integration.retrySameBooking')}</Text>}
           <PrimaryButton label={t(draft.submission ? 'common.retry' : 'booking.submit')} loadingLabel={t('booking.submitting')}
             disabled={!draft.submission && !canSubmit} loading={pending} fullWidth onPress={submitBooking} />
+          {loadedService && <View style={styles.serviceSummary}>
+            <ServicePricing pricing={loadedService.pricing} centered />
+          </View>}
         </View>
       </FormScrollContainer>
     </ScreenContainer>
@@ -271,9 +271,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { ...typography.section, flex: 1, color: colors.ink },
   serviceSummary: {
-    backgroundColor: colors.mint, borderRadius: radius.lg, padding: spacing.md, gap: spacing.xxs,
+    backgroundColor: colors.mint, borderRadius: radius.lg, paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm, gap: spacing.xxs,
   },
-  serviceName: { ...typography.section, color: colors.deep },
   visitCard: { gap: spacing.sm },
   hint: { ...typography.supporting, color: colors.muted },
   group: { gap: spacing.xs },

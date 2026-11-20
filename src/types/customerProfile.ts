@@ -19,3 +19,8 @@ export const customerProfileSchema = z.object({
 
 export type CustomerProfile = z.infer<typeof customerProfileSchema>;
 export type CustomerDetails = Pick<CustomerProfile, 'fullName' | 'primaryPhone' | 'alternatePhone'>;
+export const solarCapacityOptions = [3, 4, 5, 7, 10] as const;
+export type CustomerRegistration = CustomerDetails & {
+  solarCompany?: string;
+  solarCapacityKv?: (typeof solarCapacityOptions)[number];
+};

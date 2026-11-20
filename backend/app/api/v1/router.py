@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.modules.admins.router import router as admins_router
 from app.modules.admins.dashboard_router import router as admin_dashboard_router
+from app.modules.assistant.router import router as assistant_router
 from app.modules.availability.router import router as availability_router
 from app.modules.bookings.router import router as bookings_router
 from app.modules.bookings.admin_router import router as admin_bookings_router
@@ -21,7 +22,7 @@ from app.modules.technicians.assignment_router import router as admin_assignment
 
 router = APIRouter()
 for module_router in (
-    system_router, public_info_router, customers_router, bookings_router, services_router,
+    system_router, public_info_router, customers_router, bookings_router, services_router, assistant_router,
     locations_router, location_router, saved_addresses_router, business_router, availability_router,
     admins_router, admin_bookings_router, admin_customers_router, admin_dashboard_router,
     technicians_router, admin_assignments_router, customer_notifications_router, admin_notifications_router, crm_router,

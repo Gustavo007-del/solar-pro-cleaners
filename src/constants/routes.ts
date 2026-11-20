@@ -1,5 +1,6 @@
 export const appRoutes = {
   booking: '/booking',
+  assistant: '/assistant',
   bookingDetails: '/booking/[bookingId]',
   bookingSuccess: '/booking/success/[bookingId]',
   home: '/(main)/home',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { fullNameSchema, indianMobileSchema } from '@/types/customerProfile';
+import { fullNameSchema, indianMobileSchema, solarCapacityOptions } from '@/types/customerProfile';
 
 function normalizeMobile(value: string) {
   const digits = value
@@ -26,6 +26,9 @@ export const registrationSchema = z.object({
   fullName: fullNameSchema,
   primaryPhone: primaryMobile,
   alternatePhone: alternateMobile,
+  solarCompany: z.string().trim().max(100).regex(/^[^\x00-\x1f\x7f]*$/)
+    .transform((value) => value || undefined).optional(),
+  solarCapacityKv: z.literal(solarCapacityOptions).nullish().transform((value) => value ?? undefined),
 });
 
 export type RegistrationInput = z.input<typeof registrationSchema>;

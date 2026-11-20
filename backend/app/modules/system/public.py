@@ -47,7 +47,7 @@ class PublicContact(BaseModel):
 
 POLICY = (
     ("Information we use",
-     "Solar Care uses the contact details, service addresses, booking details and service notes you provide. "
+     "Solar Care uses the contact details, optional solar company and capacity, service addresses, booking details and service notes you provide. "
      "If you choose to share coordinates, we use them to check coverage and identify the service location. "
      "The service does not track your location in the background."),
     ("How we use it",
@@ -61,10 +61,44 @@ POLICY = (
      "If you turn on push notifications, we use a device token and delivery records to send announcements and service "
      "updates through Expo and your phone’s push service. You can turn notifications off in Solar Care or your phone settings. "
      "A message may be visible on your lock screen depending on those settings."),
+    ("AI assistant",
+     "When you use the assistant, we save your messages and replies so you can continue the conversation. "
+     "We send your question and relevant recent messages to Groq to generate a reply. "
+     "Avoid including personal details in chat. You can delete a saved conversation using Clear chat in the app."),
     ("Retention and account requests",
      "We retain account and service records as needed for operations, security and applicable obligations. "
      "Deactivating an account can end access while preserving booking history. Contact us to ask about access, correction, "
      "deactivation or deletion of your information. We may need to verify your identity."),
+)
+
+
+TERMS = (
+    ("Introduction",
+     "These draft terms describe the Solar Care booking experience. The business will provide the approved terms before publication."),
+    ("Description of Service",
+     "Solar Care lets customers prepare requests for professional solar panel cleaning at the installation location."),
+    ("Booking Requests",
+     "Submitting a request sends it to the service with a pending status. Keep the booking reference if you need assistance."),
+    ("Booking Confirmation",
+     "The business must confirm a request before service is arranged. A pending record indicates that confirmation is still required."),
+    ("Service Location",
+     "Provide the address of the solar installation and review any GPS location before submitting. Include directions that would help the team find the site."),
+    ("Customer Responsibilities",
+     "Provide accurate contact and installation details. Coordinate access to the installation with the business and share relevant site conditions."),
+    ("Service Scheduling",
+     "Scheduling depends on the installation location and the business’s availability. Arrange a suitable time with the business."),
+    ("Changes and Cancellation",
+     "Contact the business to discuss changes or cancellation. The business will publish its applicable policy before release."),
+    ("Pricing and Payment",
+     "Ask the business about pricing and payment arrangements before agreeing to service. The business will provide the applicable terms."),
+    ("Service Limitations",
+     "The business will review access and site conditions when deciding whether it can provide the requested service."),
+    ("Communication",
+     "Use the listed contact channels to reach the team. The business may use the contact details you provide to discuss your request."),
+    ("Changes to Terms",
+     "The business will publish the approved terms and communicate later changes through its chosen channels."),
+    ("Contact Information",
+     "Use the business contact details published in the app for questions about service, privacy, or these terms."),
 )
 
 
@@ -146,6 +180,17 @@ def privacy_page(settings: AppSettings) -> HTMLResponse:
         {sections}
         <p><a href="/delete-account">Request account and data deletion</a></p>
         <p><a href="/contact-us">Contact us about privacy</a></p>
+    """)
+
+
+@web.api_route("/terms", methods=["GET", "HEAD"])
+def terms_page() -> HTMLResponse:
+    sections = "".join(f"<section><h2>{escape(title)}</h2><p>{escape(body)}</p></section>" for title, body in TERMS)
+    return render("Terms and Conditions", f"""
+        <h1>Terms and Conditions</h1>
+        <p class="muted">Draft pending business approval</p>
+        {sections}
+        <p><a href="/contact-us">Contact us about these terms</a></p>
     """)
 
 

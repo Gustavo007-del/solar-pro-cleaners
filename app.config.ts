@@ -26,6 +26,7 @@ if (sdkOverride && (!Number.isSafeInteger(targetSdkVersion) || !/^\d+$/.test(sdk
 }
 
 const plugins: NonNullable<ExpoConfig['plugins']> = [
+  './plugins/withOptionalPortraitFeature',
   'expo-router',
   ['expo-notifications', { defaultChannel: 'general', icon: branding.assets.adaptiveMonochrome, color: palette.deep }],
   '@react-native-community/datetimepicker',

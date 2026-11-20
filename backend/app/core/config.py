@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     )
 
     app_name: str = Field(default="Solar Care API", min_length=1)
+    groq_api_key: SecretStr | None = None
+    groq_model: str | None = Field(default=None, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,119}$")
     app_environment: Literal["development", "staging", "production"] = "development"
     debug: bool = False
     api_version: str = Field(default="v1", pattern=r"^v[1-9]\d*$")

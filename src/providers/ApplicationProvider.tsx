@@ -7,7 +7,7 @@ import { customerRequest, sessionService } from '@/services/api/session';
 import { clearBookingReceipt } from '@/services/bookings/bookingService';
 import { saveOnboardingStatus, savePreferredLanguage } from '@/services/storage/setupStorage';
 import { type ApplicationProgress, getLaunchPhase, type LaunchPhase, loadApplication, toCustomerProfile } from '@/store/application';
-import type { CustomerDetails, CustomerProfile } from '@/types/customerProfile';
+import type { CustomerDetails, CustomerProfile, CustomerRegistration } from '@/types/customerProfile';
 
 type Startup = { status: 'loading' } | { status: 'unavailable'; error: unknown }
   | { status: 'ready'; progress: ApplicationProgress };
@@ -20,7 +20,7 @@ type ApplicationState = {
   retryInitialization: () => void;
   setLocale: (locale: Locale) => Promise<void>;
   finishOnboarding: () => Promise<void>;
-  completeRegistration: (details: CustomerDetails) => Promise<void>;
+  completeRegistration: (details: CustomerRegistration) => Promise<void>;
   signIn: () => Promise<void>;
   logout: (all: boolean) => Promise<void>;
   editProfile: (details: Partial<CustomerDetails>) => Promise<void>;

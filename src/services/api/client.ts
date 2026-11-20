@@ -25,6 +25,7 @@ export type RequestOptions = {
   body?: object;
   token?: string;
   idempotencyKey?: string;
+  timeoutMs?: number;
 };
 
 export function queryPath(path: ApiPath, params: Record<string, string | number | null | undefined>): ApiPath {
@@ -37,7 +38,7 @@ export function queryPath(path: ApiPath, params: Record<string, string | number 
 export async function apiRequest<T>(path: ApiPath, schema: z.ZodType<T>, options: RequestOptions = {}): Promise<T> {
   if (!appConfig.api.baseUrl) throw new ApiError('configuration', 'Configure the app API address.');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
   try {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (options.body !== undefined) headers['Content-Type'] = 'application/json';

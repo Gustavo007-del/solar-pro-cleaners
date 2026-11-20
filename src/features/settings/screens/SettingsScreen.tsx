@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
-import { CalendarDays, FileText, Languages, MapPin, Shield, Sun, Trash2, Type, UserRound, UserRoundPen } from 'lucide-react-native';
+import { CalendarDays, FileText, Languages, LogOut, MapPin, Shield, Sun, Trash2, Type, UserRound, UserRoundPen } from 'lucide-react-native';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ScreenContainer, ScrollContainer } from '@/components/layout/Containers';
-import { OutlineButton } from '@/components/buttons/Buttons';
+import { OutlineButton, PrimaryButton } from '@/components/buttons/Buttons';
 import { DetailRows } from '@/components/layout/DetailRows';
 import { AppHeader, SectionHeader } from '@/components/layout/Headers';
 import { SelectionCard } from '@/components/forms/Selection';
@@ -80,10 +80,13 @@ export function SettingsScreen() {
           ]} />
         </Entrance>
         <AppCard>
-          <OutlineButton label={t('integration.logout')} disabled={signOut.pending} onPress={() => confirmLogout(false)} />
+          <PrimaryButton label={t('integration.logout')} icon={LogOut} fullWidth
+            disabled={signOut.pending} onPress={() => confirmLogout(false)} />
           <OutlineButton label={t('integration.logoutAll')} disabled={signOut.pending} onPress={() => confirmLogout(true)} />
           {signOut.pending && <Text style={typography.supporting}>{t('common.loading')}</Text>}
-          {signOut.failed && <Text style={[typography.supporting, styles.error]}>{message(signOut.error, t('error.save'))}</Text>}
+          {signOut.failed && <Text accessibilityLiveRegion="polite" style={[typography.supporting, styles.error]}>
+            {message(signOut.error, t('error.save'))}
+          </Text>}
         </AppCard>
         <Entrance variant="fade">
           <AccountMenu title={t('settings.legal')} items={[

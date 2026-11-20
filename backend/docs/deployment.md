@@ -34,6 +34,16 @@ Use a dedicated least-privilege runtime role. Use TLS and prefer sslmode=verify-
 - The private object storage contract lives in app/core/storage.py. Before adding uploads, authorize access to the booking and its media, decode and validate file contents and dimensions, strip metadata and issue short-lived signed URLs only after a separate access check.
 - Keep booking and assignment writes in their database transactions. Future reports, reminders and notifications can call existing services from a separate runner. Use idempotent jobs and a durable outbox for notifications that must follow a committed transaction.
 
+## AI assistant on Render
+
+Run the normal Alembic release job before deploying the API. Revisions `20261120_0012` and `20261120_0013` add assistant history and the optional registration fields. If the runtime database role differs from the migration owner, give that backend-only role access to the two assistant tables and add role-specific RLS policies. The tables are private to the backend.
+
+Create a key in a Groq organization on the **Free** plan. In the Render service environment set `GROQ_API_KEY` to that key and `GROQ_MODEL` to a currently available free chat model. As of November 20, 2026, `openai/gpt-oss-20b` is listed at 30 requests per minute, 1,000 per day, 8,000 tokens per minute, and 200,000 per day. Verify model availability and your organization's limits before enabling the assistant or changing models. Keep the organization on the Free plan to prevent usage charges. [Groq free plan limits](https://console.groq.com/docs/rate-limits) · [Organization limits](https://console.groq.com/settings/limits)
+
+The API makes one standard Groq inference request per generation attempt, with an 18-second deadline. Application limits are four generations per customer per minute, twenty for the backend per minute, and nine hundred per UTC day. Groq may throttle sooner based on tokens or other use in the organization. The app displays a retry-later message when that happens. Credentials belong in Render's server environment.
+
+To verify a deployment, sign into the mobile app, send a question, send a follow-up, reopen the conversation from Chat history, regenerate the last reply, and clear the conversation. The local integration check runs against disposable PostgreSQL with a controlled HTTP response at the Groq boundary. From `backend/` with `TEST_POSTGRES_URL` pointed at that local cluster, run `python -m tests.run_assistant_integration`.
+
 ## Backup and recovery
 
 Set recovery-point and recovery-time targets with the business. Confirm the database plan's backup cadence, retention and point-in-time recovery options. Configure automated encrypted backups and an independent copy where required. Restrict access and retain copies for the approved period. Verify backups by restoring to an isolated database and checking the migration revision, permissions, essential record counts and representative app flows. [Supabase backup and recovery](https://supabase.com/docs/guides/platform/backups)

@@ -39,6 +39,8 @@ class CustomerRegister(CustomerInput):
     full_name: FullName
     phone_number: PhoneNumber
     alternate_phone_number: PhoneNumber | None = None
+    solar_company: FullName | None = None
+    solar_capacity_kv: Literal[3, 4, 5, 7, 10] | None = None
     installation_credential: OpaqueSecret = Field(
         description="Canonical unpadded base64url from 32 CSPRNG bytes. The example credential is illustrative only."
     )
@@ -76,6 +78,8 @@ class CustomerProfile(BaseModel):
     full_name: str
     phone_number: str
     alternate_phone_number: str | None
+    solar_company: str | None = None
+    solar_capacity_kv: int | None = None
     is_active: bool
     created_at: datetime
     updated_at: datetime

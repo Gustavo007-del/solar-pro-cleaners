@@ -2,6 +2,7 @@
 
 from app.models.base import Base
 from app.modules.admins.models import AdminAuditLog, AdminLoginBucket, AdminSession, AdminUser
+from app.modules.assistant.models import AIConversation, AIMessage
 from app.modules.bookings.models import Booking, BookingAddress, BookingAdminNote, BookingPricingSnapshot, BookingStatusHistory
 from app.modules.business.models import BusinessClosure, BusinessOperatingHour, BusinessProfile
 from app.modules.customers.models import Customer, CustomerInstallation, RefreshSession
@@ -13,6 +14,7 @@ from app.modules.services.models import Service
 from app.modules.technicians.models import BookingAssignment, Technician, TechnicianAvailability, TechnicianLeave
 
 __all__ = [
+    "AIConversation", "AIMessage",
     "FollowUp", "Lead", "LeadEvent", "LeadSource",
     "AdminAuditLog", "AdminLoginBucket", "AdminSession", "AdminUser",
     "Base", "Booking", "BookingAddress", "BookingAdminNote", "BookingPricingSnapshot", "BookingStatusHistory",

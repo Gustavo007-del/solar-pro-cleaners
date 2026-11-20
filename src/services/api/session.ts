@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { z } from 'zod';
 
 import { appConfig } from '@/constants/config';
-import type { CustomerDetails } from '@/types/customerProfile';
+import type { CustomerRegistration } from '@/types/customerProfile';
 import { ApiError, apiRequest, type RequestOptions } from './client';
 import type { ApiPath } from './config';
 import { authSchema, profileSchema, tokensSchema, type ServerProfile } from './customerSchemas';
@@ -180,7 +180,7 @@ export const sessionService = {
       throw error;
     }
   },
-  register(details: CustomerDetails) {
+  register(details: CustomerRegistration) {
     return serialize(async () => {
       await initialize();
       if (stored?.state === 'active' || stored?.state === 'signed_out') return installationLogin(stored);
@@ -189,7 +189,8 @@ export const sessionService = {
       try {
         const result = await apiRequest('/customers/register', authSchema, {
           method: 'POST', body: { full_name: details.fullName, phone_number: details.primaryPhone,
-            alternate_phone_number: details.alternatePhone ?? null, installation_credential: session.installation },
+            alternate_phone_number: details.alternatePhone ?? null, installation_credential: session.installation,
+            solar_company: details.solarCompany, solar_capacity_kv: details.solarCapacityKv },
         });
         return await saveAuthentication(session, result);
       } catch (error) {

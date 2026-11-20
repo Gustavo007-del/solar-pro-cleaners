@@ -88,6 +88,7 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={phase === 'main'}>
         <Stack.Screen name="(main)" />
+        <Stack.Screen name="assistant" />
         <Stack.Screen name="booking/index" options={{
           animation: reduceMotion ? 'none' : 'slide_from_right',
         }} />

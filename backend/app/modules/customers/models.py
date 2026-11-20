@@ -12,6 +12,7 @@ class Customer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("length(btrim(full_name)) > 0", name="full_name_nonblank"),
         CheckConstraint("phone_number ~ '^[+]91[6-9][0-9]{9}$'", name="phone_format"),
+        CheckConstraint("solar_capacity_kv IN (3, 4, 5, 7, 10)", name="solar_capacity_kv"),
         CheckConstraint(
             "alternate_phone_number IS NULL OR alternate_phone_number ~ '^[+]91[6-9][0-9]{9}$'",
             name="alternate_phone_format",
@@ -21,6 +22,8 @@ class Customer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     full_name: Mapped[str] = mapped_column(String(100))
     phone_number: Mapped[str] = mapped_column(String(13))
     alternate_phone_number: Mapped[str | None] = mapped_column(String(13))
+    solar_company: Mapped[str | None] = mapped_column(String(100))
+    solar_capacity_kv: Mapped[int | None]
     is_active: Mapped[bool] = mapped_column(Boolean, server_default=true())
 
 

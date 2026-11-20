@@ -123,6 +123,8 @@ def register_customer(db: Session, settings: Settings, data: CustomerRegister) -
                 full_name=data.full_name,
                 phone_number=data.phone_number,
                 alternate_phone_number=data.alternate_phone_number,
+                solar_company=data.solar_company,
+                solar_capacity_kv=data.solar_capacity_kv,
             )
             db.add(customer)
             db.flush()
