@@ -65,6 +65,7 @@
   "nav": {
     "home": "Home",
     "bookings": "My Bookings",
+    "bookingsTab": "Bookings",
     "contact": "Contact",
     "profile": "Profile",
     "onboarding": "Welcome",
